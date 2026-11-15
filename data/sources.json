@@ -1,0 +1,22 @@
+[
+  {
+    "repo": "cirrus-environment-sensor",
+    "commit": "57e6b5781ad0be4e85608f65594643b41d443243",
+    "files": 1
+  },
+  {
+    "repo": "formline-articulated-lamp",
+    "commit": "9f07ab38a2136254716ece63612caa5bf73fc373",
+    "files": 1
+  },
+  {
+    "repo": "cirrus-formline-ad-campaigns",
+    "commit": "593aa50252a41698bc918d70f32a3ff4f94350c6",
+    "files": 12
+  },
+  {
+    "repo": "industrial-sensor-carrier-pcb",
+    "commit": "7973cf1aaa14a79593e132b6b1a5794010cbf8b3",
+    "files": 4
+  }
+]

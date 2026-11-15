@@ -1,0 +1,20 @@
+{
+  "name": "portfolio",
+  "private": true,
+  "type": "module",
+  "description": "An interactive walk through eight projects. Plain HTML, CSS and JavaScript; no build step.",
+  "scripts": {
+    "start": "node scripts/serve.mjs 8080",
+    "sync": "node scripts/sync.mjs",
+    "test": "node --test --test-concurrency=1 --test-timeout=120000 \"test/*.test.mjs\"",
+    "lighthouse": "node scripts/lighthouse.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "axe-core": "4.14.0",
+    "lighthouse": "13.6.0",
+    "playwright-core": "1.63.0"
+  }
+}

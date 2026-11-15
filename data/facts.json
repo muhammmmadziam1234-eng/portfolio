@@ -1,0 +1,110 @@
+{
+  "sensor": [
+    {
+      "label": "Case size",
+      "value": "104 × 109 × 33.6 mm",
+      "path": "handoff/measurements.json",
+      "line": "Every dimension on the sheets is read from the model: case 104 × 109 mm, 13 grille slots."
+    },
+    {
+      "label": "Gasket squeeze at nominal",
+      "value": "24%",
+      "path": "handoff/measurements.json",
+      "line": "Gasket squeeze is 24% at nominal: 2.5 mm pressed to 1.9 mm."
+    },
+    {
+      "label": "Lift to release the wall cleat",
+      "value": "52.25 mm",
+      "path": "handoff/measurements.json",
+      "line": "The case lifts 52.25 mm to clear the wall cleat."
+    },
+    {
+      "label": "Grille slots",
+      "value": "13, each 2.38 mm wide",
+      "path": "handoff/measurements.json",
+      "line": "13 grille slots."
+    }
+  ],
+  "lamp": [
+    {
+      "label": "Joint combinations evaluated",
+      "value": "756",
+      "path": "articulation-evidence.json",
+      "line": "756 joint combinations evaluated across all three limits."
+    },
+    {
+      "label": "Motion frames checked",
+      "value": "91",
+      "path": "articulation-evidence.json",
+      "line": "All 91 frames of the motion checked for camera framing and cable fit."
+    },
+    {
+      "label": "Forward reach over the grid, Blender units",
+      "value": "−0.33 to 1.88",
+      "path": "articulation-evidence.json",
+      "line": "Reach spans −0.33 to 1.88 Blender units."
+    },
+    {
+      "label": "Height over the grid, Blender units",
+      "value": "1.32 to 4.11",
+      "path": "articulation-evidence.json",
+      "line": "Height spans 1.32 to 4.11 Blender units."
+    },
+    {
+      "label": "Largest gap between cable and anchor",
+      "value": "0.02 Blender units",
+      "path": "articulation-evidence.json",
+      "line": ""
+    }
+  ],
+  "ads": [
+    {
+      "label": "Files exported",
+      "value": "8 images, 2 videos",
+      "path": ".github/workflows/render.yml",
+      "line": "All 10 files are exported again on every push and checked for size and length."
+    },
+    {
+      "label": "Ad sizes",
+      "value": "1080 × 1080 and 1080 × 1350 pixels",
+      "path": ".github/workflows/render.yml",
+      "line": "Ads are 1080 × 1080 and 1080 × 1350 pixels."
+    },
+    {
+      "label": "Story videos",
+      "value": "7.0 s, 1080 × 1920, 168 frames",
+      "path": "render_stories.py",
+      "line": ""
+    }
+  ],
+  "pcb": [
+    {
+      "label": "Independent fabrication checks",
+      "value": "26 of 26 pass",
+      "path": "reports/independent-fabrication-check.json",
+      "line": "A second tool re-reads the fabrication files: 26 of 26 checks pass."
+    },
+    {
+      "label": "KiCad layout rules",
+      "value": "0 violations, 0 unconnected",
+      "path": "reports/drc.json",
+      "line": "KiCad 10 reports 0 violations and 0 unconnected items; 5 checks are switched off and listed."
+    },
+    {
+      "label": "Board",
+      "value": "101.6 × 76.2 mm, 4 copper layers",
+      "path": "reports/independent-fabrication-check.json",
+      "line": ""
+    },
+    {
+      "label": "Vias and plated holes",
+      "value": "59 vias, 117 plated holes",
+      "path": "reports/independent-fabrication-check.json",
+      "line": ""
+    }
+  ],
+  "atlas": [],
+  "kit": [],
+  "tracker": [],
+  "paint": []
+}
