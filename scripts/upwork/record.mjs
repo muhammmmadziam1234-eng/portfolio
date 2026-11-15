@@ -1,33 +1,36 @@
 #!/usr/bin/env node
-// Records a silent, captioned walkthrough of this site as an MP4 for an Upwork portfolio entry.
-// It drives the real pages, so what the video shows is what a visitor can do.
-// usage: node scripts/upwork/record.mjs [output.mp4]       (needs ffmpeg on the PATH)
-// Upwork project videos: MP4, up to 60 seconds. The script fails if the result is longer.
+// Records silent, captioned videos of this site for Upwork portfolio entries: one short clip per project and one combined tour.
+// It drives the real pages, so what a video shows is what a visitor can do.
+//
+// usage: node scripts/upwork/record.mjs [output folder] [--only sensor,lamp]
+//   needs ffmpeg and ffprobe on the PATH, and Chrome or Chromium (CHROME_PATH)
+// Upwork project videos: MP4, up to 60 seconds. The script fails if the combined tour is longer.
 import {execFileSync} from 'node:child_process';
-import {mkdirSync, mkdtempSync, readdirSync, rmSync, statSync} from 'node:fs';
+import {copyFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import {chromium} from 'playwright-core';
 import {serve} from '../serve.mjs';
+import {scenes} from './scenes.mjs';
 
-const output = resolve(process.argv[2] ?? 'upwork/walkthrough.mp4');
-mkdirSync(resolve(output, '..'), {recursive: true});
-const work = mkdtempSync(join(tmpdir(), 'walkthrough-'));
+const args = process.argv.slice(2);
+const option = name => { const i = args.indexOf(`--${name}`); return i >= 0 ? args[i + 1] : ''; };
+const out = resolve(args.find(a => !a.startsWith('--') && a !== option('only')) ?? 'upwork/video');
+const only = option('only').split(',').filter(Boolean);
+mkdirSync(out, {recursive: true});
+const work = mkdtempSync(join(tmpdir(), 'clips-'));
 const server = await serve(0);
 const base = `http://127.0.0.1:${server.address().port}/`;
 const browser = await chromium.launch({executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox']});
-const context = await browser.newContext({viewport: {width: 1280, height: 720}, reducedMotion: 'no-preference', recordVideo: {dir: work, size: {width: 1280, height: 720}}});
-const page = await context.newPage();
 
 // A caption bar and a visible pointer, drawn inside the page so they appear in the recording.
-await page.addInitScript(() => {
+const overlay = () => {
   const zoom = 0.85; // fits a whole demo above the caption bar in a 1280 by 720 frame
   const ready = () => {
     if (document.getElementById('rec-caption')) return;
     document.documentElement.style.zoom = String(zoom);
     const style = document.createElement('style');
-    style.textContent = `#rec-caption{position:fixed;left:0;right:0;bottom:0;z-index:99999;padding:16px 36px 18px;background:rgba(20,28,34,.92);color:#fff;font:600 30px/1.25 Archivo,Arial,sans-serif;letter-spacing:-.005em;transition:opacity .25s}
-    #rec-caption:empty{opacity:0}
+    style.textContent = `#rec-caption{position:fixed;left:0;right:0;bottom:0;z-index:99999;padding:16px 36px 18px;background:rgba(20,28,34,.92);color:#fff;font:600 30px/1.25 Archivo,Arial,sans-serif;letter-spacing:-.005em}
     #rec-dot{position:fixed;z-index:100000;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:rgba(255,243,161,.85);border:2px solid #14382b;pointer-events:none;left:-40px;top:-40px;transition:transform .12s}
     #rec-dot.down{transform:scale(.7)}`;
     document.head.append(style);
@@ -39,68 +42,55 @@ await page.addInitScript(() => {
     addEventListener('mouseup', () => dot.classList.remove('down'), true);
   };
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', ready); else ready();
-});
-
-const say = async (text, ms) => { await page.evaluate(t => { document.getElementById('rec-caption').textContent = t; }, text); await page.waitForTimeout(ms); };
-const glide = async (x, y, steps = 24) => page.mouse.move(x, y, {steps});
-const centre = async locator => { const b = await locator.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
-const go = async (hash, settle = 400) => {
-  await page.evaluate(h => { document.getElementById('rec-caption').textContent = ''; location.hash = h; }, hash);
-  await page.waitForFunction(h => location.hash === h && !document.querySelector('main[aria-busy]'), hash);
-  await page.waitForTimeout(settle);
 };
 
-const started = Date.now();
-await page.goto(base, {waitUntil: 'networkidle'});
-await page.mouse.move(640, 360);
-
-// Home: the first sensor picture pulls itself apart once.
-await say('Eight projects you can try, each with its proof', 4600);
-
-// Sensor
-await go('#/p/sensor');
-await say('Pull a 3D-modelled sensor apart', 600);
-const slider = page.getByRole('slider').first();
-const [sx, sy] = await centre(slider);
-await glide(sx - 330, sy); await page.mouse.down();
-for (let i = 0; i <= 20; i++) { await page.mouse.move(sx - 330 + i * 33, sy); await page.waitForTimeout(110); }
-await page.mouse.up();
-await say('Then open its drawing sheets, measured from the model', 600);
-await page.getByRole('tab', {name: 'Drawing sheets'}).click();
-await page.waitForTimeout(700);
-await page.getByRole('button', {name: 'Zoom in'}).click(); await page.waitForTimeout(500);
-await page.getByRole('button', {name: 'Zoom in'}).click(); await page.waitForTimeout(900);
-
-// Lamp
-await go('#/p/lamp');
-await say('Move a lamp through its checked poses', 500);
-for (const pose of ['Raised', 'Forward', 'Lowered']) {
-  const [bx, by] = await centre(page.getByRole('button', {name: pose, exact: true}));
-  await glide(bx, by, 14); await page.mouse.click(bx, by); await page.waitForTimeout(950);
+/** Helpers handed to every scene. */
+function tools(page) {
+  const say = async (text, ms) => { await page.evaluate(t => { document.getElementById('rec-caption').textContent = t; }, text); await page.waitForTimeout(ms); };
+  const centre = async locator => { const b = await locator.boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
+  return {
+    say, centre,
+    glide: (x, y, steps = 24) => page.mouse.move(x, y, {steps}),
+    click: async (locator, pause = 700) => { const [x, y] = await centre(locator); await page.mouse.move(x, y, {steps: 16}); await page.mouse.click(x, y); await page.waitForTimeout(pause); },
+    drag: async (x1, y, x2, ms = 2200) => {
+      await page.mouse.move(x1, y, {steps: 14}); await page.mouse.down();
+      const n = 20; for (let i = 1; i <= n; i++) { await page.mouse.move(x1 + (x2 - x1) * i / n, y); await page.waitForTimeout(ms / n); }
+      await page.mouse.up();
+    },
+    go: async hash => {
+      await page.evaluate(h => { document.getElementById('rec-caption').textContent = ''; location.hash = h; }, hash);
+      await page.waitForFunction(h => location.hash === h && !document.querySelector('main[aria-busy]'), hash);
+      await page.waitForTimeout(400);
+    }
+  };
 }
 
-// Ads
-await go('#/p/ads');
-await say('Ads and silent story videos, composed in Python', 500);
-await page.mouse.wheel(0, 380); await page.waitForTimeout(1500);
+const recorded = [];
+for (const [slug, scene] of Object.entries(scenes)) {
+  if (only.length && !only.includes(slug)) continue;
+  const context = await browser.newContext({viewport: {width: 1280, height: 720}, reducedMotion: 'no-preference', recordVideo: {dir: join(work, slug), size: {width: 1280, height: 720}}});
+  await context.addInitScript(overlay);
+  const page = await context.newPage();
+  await page.goto(base + (scene.hash ?? `#/p/${slug}`), {waitUntil: 'networkidle'});
+  await page.mouse.move(640, 360);
+  await scene.run(page, tools(page), {base});
+  await context.close();
+  const webm = join(work, slug, readdirSync(join(work, slug)).find(f => f.endsWith('.webm')));
+  const mp4 = join(out, `${slug}.mp4`);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', webm, '-vf', 'fps=30,format=yuv420p', '-c:v', 'libx264', '-crf', '22', '-preset', 'slow', '-movflags', '+faststart', '-an', mp4]);
+  recorded.push(mp4);
+  const seconds = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', mp4], {encoding: 'utf8'}));
+  console.log(`${slug}: ${seconds.toFixed(1)} s, ${(statSync(mp4).size / 1e6).toFixed(1)} MB`);
+}
+await browser.close(); server.close();
 
-// PCB
-await go('#/p/pcb');
-await say('Click a track on a four-layer board to light its whole net', 700);
-const spot = await page.evaluate(() => {
-  const hits = [...document.querySelectorAll('.board-svg line.hit')];
-  const longest = hits.reduce((a, b) => (b.getTotalLength?.() ?? 0) > (a.getTotalLength?.() ?? 0) ? b : a);
-  const r = longest.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2];
-});
-await glide(spot[0], spot[1], 30); await page.mouse.click(spot[0], spot[1]); await page.waitForTimeout(1800);
-await say('Or pick a part and see it framed on the board', 300);
-await page.selectOption('#pcb-part', 'U1'); await page.waitForTimeout(2200);
-
-const seconds = (Date.now() - started) / 1000;
-await context.close(); await browser.close(); server.close();
-const webm = join(work, readdirSync(work).find(f => f.endsWith('.webm')));
-execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', webm, '-vf', 'fps=30,format=yuv420p', '-c:v', 'libx264', '-crf', '22', '-preset', 'slow', '-movflags', '+faststart', '-an', output]);
+if (!only.length && recorded.length > 1) {
+  const list = join(work, 'list.txt');
+  writeFileSync(list, recorded.map(f => `file '${f}'`).join('\n'));
+  const tour = join(out, 'tour.mp4');
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', '-movflags', '+faststart', tour]);
+  const seconds = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', tour], {encoding: 'utf8'}));
+  console.log(`tour: ${seconds.toFixed(1)} s, ${(statSync(tour).size / 1e6).toFixed(1)} MB`);
+  if (seconds > 60) { console.error('The tour is longer than the 60 seconds Upwork allows for a project video. Shorten the scenes.'); process.exitCode = 1; }
+}
 rmSync(work, {recursive: true, force: true});
-const length = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', output], {encoding: 'utf8'}));
-console.log(`${output}: ${length.toFixed(1)} s, ${(statSync(output).size / 1e6).toFixed(1)} MB (recorded in ${seconds.toFixed(1)} s)`);
-if (length > 60) { console.error('The video is longer than the 60 seconds Upwork allows for a project video.'); process.exit(1); }
