@@ -20,13 +20,13 @@ const copy = {
     title: 'Four-layer sensor carrier PCB, checked from its fabrication files',
     role: 'PCB designer: schematic, layout, fabrication files and verification',
     skills: ['PCB Design', 'KiCad', 'Electronic Circuit Design', 'Hardware Design', 'Python'],
-    description: `A four-layer carrier board for a 3.3 V controller with RS-485, SPI, I2C, analog sensing and low-side loads, designed in KiCad through to the Gerber and drill files. A second tool re-reads those files and checks them against the board: ${f('pcb', 'Independent fabrication checks')}, and KiCad's layout rules report ${f('pcb', 'KiCad layout rules')}. In the interactive viewer, click any track to light its whole net. No board has been built yet; the bring-up plan is in the repository.`
+    description: `A four-layer carrier board for a 3.3 V controller with RS-485, SPI, I2C, analog sensing and low-side loads, designed in KiCad through to the Gerber and drill files. A separate script re-reads those files with gerbonara and checks them against the board: ${f('pcb', 'Fabrication-file checks')}, and KiCad's layout rules report ${f('pcb', 'KiCad layout rules')}. In the interactive viewer, click any track to light its whole net. No board has been built yet; the bring-up plan is in the repository.`
   }),
   sensor: () => ({
     title: 'Wall-mounted air sensor: 3D assembly with measured drawing sheets',
     role: '3D product designer: modelling, assembly, drawings and renders',
     skills: ['Blender', '3D Modeling', 'Product Design', '3D Rendering', 'Python'],
-    description: `A wall-mounted air sensor modelled as a real assembly in Blender: housing, gasket, two circuit boards, a vent cassette and a wall cleat. The drawing sheets are generated from the model, so every dimension is measured (case ${f('sensor', 'Case size')}, gasket squeeze ${f('sensor', 'Gasket squeeze at nominal')} at nominal). In the interactive tour, pull the model apart with a slider and zoom into the sheets. A concept study: airflow, seal force and heat are not simulated.`
+    description: `A wall-mounted air sensor modelled as a real assembly in Blender: housing, gasket, two circuit boards, a vent cassette and a wall cleat. The drawing sheets are generated from the model, so their dimensions are read from it (case ${f('sensor', 'Case size')}, gasket squeeze ${f('sensor', 'Gasket squeeze at nominal')} at nominal). In the interactive tour, pull the model apart with a slider and zoom into the sheets. A concept study: airflow, seal force and heat are not simulated.`
   }),
   lamp: () => ({
     title: 'Articulated desk lamp: 3D model with a verified motion study',
@@ -34,11 +34,35 @@ const copy = {
     skills: ['Blender', '3D Modeling', 'Product Design', '3D Animation', 'Python'],
     description: `A desk lamp with three driven hinges, modelled procedurally in Blender. Before rendering, the build script evaluated ${f('lamp', 'Joint combinations evaluated')} joint combinations across all three limits and checked all ${f('lamp', 'Motion frames checked')} frames of the motion for camera framing and cable fit. In the interactive tour, move the lamp through its poses and read the reach and height at each. A digital study: part clearance, friction and light output are not verified.`
   }),
+  atlas: () => ({
+    title: 'Flood exposure map: spatial analysis cross-checked against Shapely',
+    role: 'Developer: spatial engine, map interface, tests and verification',
+    skills: ['JavaScript', 'GIS', 'Data Visualization', 'Python', 'Web Development'],
+    description: `A map and batch tool that classify facilities against overlapping flood zones, with import and export of your own GeoJSON. The analysis was compared with Shapely, a separate geometry library: ${f('atlas', 'Cross-check against Shapely')}. A large run (${f('atlas', 'Large run')}) is recorded with its machine. The app has no dependencies and passes an automated accessibility scan. The tour runs the real app. Fictional data: not for planning or emergencies.`
+  }),
+  kit: () => ({
+    title: 'GeoJSON cleaning library and command-line tool with a report schema',
+    role: 'Developer: library, command line, JSON Schema, tests and benchmarks',
+    skills: ['JavaScript', 'Node.js', 'GIS', 'Data Cleaning', 'JSON'],
+    description: `A library and command-line tool that clean GeoJSON, flag invalid coordinates and polygons, remove duplicates, and give each rejection a rule name and a fix. The same code runs unchanged in the browser tour. Streaming a large file: ${f('kit', 'Large file, streamed')} (recorded machine). Its output is accepted by the flood atlas's own validator: ${f('kit', "Output accepted by the flood atlas's own validator")}.`
+  }),
+  tracker: () => ({
+    title: 'Service desk web app: TypeScript, roles, OpenAPI, Docker and CI',
+    role: 'Full-stack developer: API, interface, security, tests and deployment files',
+    skills: ['TypeScript', 'Node.js', 'REST API', 'Docker', 'SQL'],
+    description: `An internal service desk: sign-in with roles, requests with priority and assignee, comments, and edits that cannot silently overwrite each other. The server runs TypeScript directly on Node with no runtime dependencies. The API is described in OpenAPI 3.1 and contract tests check the running server against it. Tests: ${f('tracker', 'Tests')}; ${f('tracker', 'Line coverage of src/')}. The tour shows a recording of the real app. Demo accounts only.`
+  }),
+  paint: () => ({
+    title: 'Painting quote builder: multi-room, printable, works offline',
+    role: 'Front-end developer: pricing engine, interface, print layout and tests',
+    skills: ['JavaScript', 'HTML', 'CSS', 'Progressive Web Apps', 'Web Accessibility'],
+    description: `A quote builder for a fictional painting studio: several rooms, doors and windows, metric or imperial input, prices exact to the cent, saved quotes, a one-page printable quote and offline use. Lighthouse on a simulated phone: ${f('paint', 'Lighthouse (simulated phone)')}. ${f('paint', 'Tests')}; an accessibility scan finds ${f('paint', 'Accessibility scan (axe-core)')}. The tour runs the real app. Fictional rate card.`
+  }),
   ads: () => ({
     title: 'Product ad campaigns: square, portrait and vertical story video',
     role: 'Visual designer: ad layouts, copy and export automation',
     skills: ['Graphic Design', 'Advertising', 'Python', 'Video Editing', 'Social Media Design'],
-    description: `Square and portrait ads and seven-second vertical story videos for two products, composed in Python from Blender renders and exported at platform sizes (ads ${f('ads', 'Ad sizes')}; videos ${f('ads', 'Story videos')}). A GitHub check exports every file again on each push and checks sizes and length. The videos are silent by design, with type kept clear of platform controls.`
+    description: `Square and portrait ads and seven-second vertical story videos for two products, composed in Python from Blender renders and exported at platform sizes (ads ${f('ads', 'Ad sizes')}; videos ${f('ads', 'Story videos')}). A GitHub check exports every file again on each push and checks the ad sizes and video lengths. The videos are silent by design, with type kept clear of platform controls.`
   })
 };
 

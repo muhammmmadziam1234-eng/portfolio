@@ -2,41 +2,49 @@
   {
     "repo": "cirrus-environment-sensor",
     "commit": "57e6b5781ad0be4e85608f65594643b41d443243",
-    "files": 1
+    "files": 1,
+    "ci": false
   },
   {
     "repo": "formline-articulated-lamp",
     "commit": "9f07ab38a2136254716ece63612caa5bf73fc373",
-    "files": 1
+    "files": 1,
+    "ci": false
   },
   {
     "repo": "cirrus-formline-ad-campaigns",
     "commit": "593aa50252a41698bc918d70f32a3ff4f94350c6",
-    "files": 12
+    "files": 12,
+    "ci": true
   },
   {
     "repo": "industrial-sensor-carrier-pcb",
     "commit": "7973cf1aaa14a79593e132b6b1a5794010cbf8b3",
-    "files": 4
+    "files": 4,
+    "ci": true
   },
   {
     "repo": "flood-exposure-atlas",
     "commit": "71b283abf528c87932cfb8b74ece8915e38f5657",
-    "files": 22
+    "files": 22,
+    "ci": true
   },
   {
     "repo": "geojson-quality-kit",
     "commit": "cfc0ad3c2cca7b8c712ec313c9e7793939589e44",
-    "files": 16
+    "files": 16,
+    "ci": true
   },
   {
     "repo": "service-request-tracker",
     "commit": "de7a4581d7d072a5fcfa6cd378d9fbef719287a6",
-    "files": 6
+    "files": 6,
+    "ci": true
   },
   {
     "repo": "room-paint-estimator",
     "commit": "95f8f9873002ba8e29b43a5fa70a6246c75ecde5",
-    "files": 28
+    "files": 28,
+    "ci": true
   }
 ]

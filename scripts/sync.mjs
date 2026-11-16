@@ -63,10 +63,10 @@ const extractors = {
     const {envelope: e, vent_and_feedthrough: v, seal: s, mount: t} = m;
     return [
       {label: 'Case size', value: `${e.width} × ${e.height} × ${e.body_depth} mm`, path,
-        line: `Every dimension on the sheets is read from the model: case ${e.width} × ${e.height} mm, ${v.slot_count} grille slots.`},
+        line: `Dimensions on the sheets are read from the model: case ${e.width} × ${e.height} mm, ${v.slot_count} grille slots.`},
       {label: 'Gasket squeeze at nominal', value: `${s.nominal_squeeze_percent}%`, path,
         line: `Gasket squeeze is ${s.nominal_squeeze_percent}% at nominal: ${s.free_height} mm pressed to ${s.seat_to_land} mm.`},
-      {label: 'Lift to release the wall cleat', value: `${t.upward_slide_to_clear_flange} mm`, path, line: `The case lifts ${t.upward_slide_to_clear_flange} mm to clear the wall cleat.`},
+      {label: 'Upward shift to clear the wall cleat flanges (latch already released)', value: `${t.upward_slide_to_clear_flange} mm`, path, line: `The case shifts up ${t.upward_slide_to_clear_flange} mm to clear the wall cleat flanges, with the latch already released.`},
       {label: 'Grille slots', value: `${v.slot_count}, each ${v.slot_width} mm wide`, path, line: `${v.slot_count} grille slots.`}
     ];
   },
@@ -95,7 +95,7 @@ const extractors = {
     repo.used.add('.github/workflows/render.yml');
     return [
       {label: 'Files exported', value: `${images.length} images, ${videos.length} videos`, path: '.github/workflows/render.yml',
-        line: `All ${files.length} files are exported again on every push and checked for size and length.`},
+        line: `All ${files.length} files are exported again on every push, and the ad sizes and video lengths are checked.`},
       {label: 'Ad sizes', value: sizes.join(' and ') + ' pixels', path: '.github/workflows/render.yml', line: `Ads are ${sizes.join(' and ')} pixels.`},
       {label: 'Story videos', value: `${length.join(', ')} s, ${dims.join(', ')}, ${frames.join(', ')} frames`, path: 'render_stories.py', line: ''}
     ];
@@ -111,7 +111,7 @@ const extractors = {
         line: `Checked against Shapely on ${num(cc.pairs)} point-and-polygon pairs: ${cc.disagreements} disagreements.`},
       {label: 'Large run', value: `${num(big.points)} facilities against ${num(big.polygons)} zones in ${run.medianMs} ms`, path: e + 'benchmark.json',
         line: `${num(big.points)} facilities classified against ${num(big.polygons)} zones in ${run.medianMs} ms (median of ${run.runs} runs on one recorded machine).`},
-      {label: 'Grid index against a direct scan', value: `${Math.round(direct.gridSpeedupAtMedian)} times faster, identical results: ${direct.identicalResults ? 'yes' : 'no'}`, path: e + 'benchmark.json', line: ''},
+      {label: 'Grid index against a direct scan, on a sample', value: `${Math.round(direct.gridSpeedupAtMedian)} times faster on ${num(direct.points)} points, identical results: ${direct.identicalResults ? 'yes' : 'no'}`, path: e + 'benchmark.json', line: ''},
       {label: 'Broken copies of the engine caught', value: `${caught} of ${mu.mutants.length}`, path: e + 'crosscheck-mutants.json', line: ''},
       {label: 'Line coverage of the engine and the import checks', value: `${lines('geo.mjs')}% and ${lines('validate.mjs')}%`, path: e + 'coverage.txt', line: ''},
       {label: 'Accessibility scan (axe-core)', value: `${ax.views.reduce((n, v) => n + v.violations, 0)} violations in ${ax.views.length} views`, path: e + 'accessibility.json', line: ''}
@@ -148,7 +148,7 @@ const extractors = {
         line: `Streams ${num(bm.data.records)} records (${bm.data.fileMB} MB) in ${bm.pipeline.seconds} s using ${bm.pipeline.peakRssMB} MB of memory (one recorded machine).`},
       {label: "Output accepted by the flood atlas's own validator", value: `${kept.accepted} of ${kept.features} features, against ${raw.accepted} of ${raw.features} before cleaning`, path: e + 'atlas-check.txt',
         line: `Cleaned output is accepted by the flood atlas's own validator: ${kept.accepted} of ${kept.features} features, against ${raw.accepted} of ${raw.features} before cleaning.`},
-      {label: 'Tests and line coverage', value: `${tests[1]} tests, ${tests[5]}% of lines`, path: e + 'coverage.txt', line: ''},
+      {label: 'Tests and line coverage', value: `${tests[1]} tests (${tests[4]} skipped while measuring), ${tests[5]}% of lines`, path: e + 'coverage.txt', line: ''},
       {label: 'Rule codes with a stable name and a fix', value: `${Object.keys(ISSUE_CODES).length}`, path: 'lib/codes.mjs', line: ''}
     ];
   },
@@ -190,8 +190,8 @@ const extractors = {
     execFileSync(process.execPath, [join(site, 'scripts/pcb-data.mjs'), join(repo.dir, 'cad/meridian-carrier.kicad_pcb'), join(repo.dir, 'cad/bill-of-materials.csv'), join(site, 'data/pcb-view.json')], {stdio: 'pipe'});
     repo.used.add('cad/meridian-carrier.kicad_pcb'); repo.used.add('cad/bill-of-materials.csv');
     return [
-      {label: 'Independent fabrication checks', value: `${passed} of ${total} pass`, path: p1,
-        line: `A second tool re-reads the fabrication files: ${passed} of ${total} checks pass.`},
+      {label: 'Fabrication-file checks', value: `${passed} of ${total} pass`, path: p1,
+        line: `A separate script re-reads the Gerber and drill files and checks them against the board: ${passed} of ${total} checks pass.`},
       {label: 'KiCad layout rules', value: `${drc.violations.length} violations, ${drc.unconnected_items.length} unconnected`, path: p2,
         line: `KiCad ${drc.kicad_version.split('.')[0]} reports ${drc.violations.length} violations and ${drc.unconnected_items.length} unconnected items; ${drc.ignored_checks.length} checks are switched off and listed.`},
       {label: 'Board', value: `${m.board_mm[0]} × ${m.board_mm[1]} mm, ${layers} copper layers`, path: p1, line: ''},
@@ -210,7 +210,7 @@ for (const project of projects) {
   for (const f of facts[project.slug]) if (f.path) repo.used.add(f.path);
   for (const e of project.evidence) if (!repo.has(e.path)) problems.push(`${project.slug}: evidence file ${e.path} is not in ${project.repo}`);
   for (const f of facts[project.slug]) if (f.path && !repo.has(f.path)) problems.push(`${project.slug}: fact file ${f.path} is not in ${project.repo}`);
-  sources.push({repo: project.repo, commit: repo.commit, files: repo.used.size});
+  sources.push({repo: project.repo, commit: repo.commit, files: repo.used.size, ci: repo.has('.github/workflows')});
   console.log(`${project.slug}: ${facts[project.slug].length} figures from ${repo.used.size} files at ${repo.commit.slice(0, 7)}`);
 }
 

@@ -19,5 +19,25 @@ export const shots = {
       await page.mouse.click(spot[0], spot[1]);
     },
     async page => { await page.selectOption('#pcb-part', 'U1'); }
+  ],
+  atlas: [
+    async page => {
+      const app = page.frameLocator('iframe');
+      await app.locator('#scenario').selectOption({label: 'Expanded extent'});
+      await app.locator('#scenario').evaluate(el => el.scrollIntoView({block: 'start', behavior: 'instant'}));
+    },
+    async page => { const app = page.frameLocator('iframe'); await app.locator('#filter').selectOption({label: 'High'}); }
+  ],
+  kit: [
+    async page => { await page.locator('.issues').evaluate(el => { el.scrollTop = 0; }); },
+    async page => { await page.locator('#kit-precision').fill('3'); await page.getByRole('button', {name: 'Clean', exact: true}).click(); }
+  ],
+  tracker: [
+    async page => { await page.evaluate(() => { const v = document.querySelector('video'); v.currentTime = 20; }); await page.waitForTimeout(600); },
+    async page => { await page.getByRole('tab', {name: 'API contract'}).click(); }
+  ],
+  paint: [
+    async () => {},
+    async page => { const app = page.frameLocator('iframe'); await app.getByRole('button', {name: 'Add room'}).click(); await app.getByLabel('Length (m)').nth(1).fill('4.2'); await app.getByLabel('Width (m)').nth(1).fill('3.6'); await app.getByLabel('Height (m)').nth(1).fill('2.5'); }
   ]
 };

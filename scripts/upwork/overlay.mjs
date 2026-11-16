@@ -29,7 +29,7 @@ export function tools(page) {
   return {
     say, centre,
     glide: (x, y, steps = 24) => page.mouse.move(x, y, {steps}),
-    click: async (locator, pause = 700) => { await locator.evaluate(el => el.scrollIntoView({block: 'center', inline: 'nearest'})); await page.waitForTimeout(120); const [x, y] = await centre(locator); await page.mouse.move(x, y, {steps: 16}); await page.mouse.click(x, y); await page.waitForTimeout(pause); },
+    click: async (locator, pause = 700) => { await locator.evaluate(el => el.scrollIntoView({block: 'center', inline: 'nearest', behavior: 'instant'})); await page.waitForTimeout(120); const [x, y] = await centre(locator); await page.mouse.move(x, y, {steps: 16}); await page.mouse.click(x, y); await page.waitForTimeout(pause); },
     type: async (locator, text, pause = 400) => { await locator.click(); await locator.fill(''); await locator.pressSequentially(text, {delay: 55}); await page.waitForTimeout(pause); },
     drag: async (x1, y, x2, ms = 2200) => {
       await page.mouse.move(x1, y, {steps: 14}); await page.mouse.down();

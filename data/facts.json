@@ -4,7 +4,7 @@
       "label": "Case size",
       "value": "104 × 109 × 33.6 mm",
       "path": "handoff/measurements.json",
-      "line": "Every dimension on the sheets is read from the model: case 104 × 109 mm, 13 grille slots."
+      "line": "Dimensions on the sheets are read from the model: case 104 × 109 mm, 13 grille slots."
     },
     {
       "label": "Gasket squeeze at nominal",
@@ -13,10 +13,10 @@
       "line": "Gasket squeeze is 24% at nominal: 2.5 mm pressed to 1.9 mm."
     },
     {
-      "label": "Lift to release the wall cleat",
+      "label": "Upward shift to clear the wall cleat flanges (latch already released)",
       "value": "52.25 mm",
       "path": "handoff/measurements.json",
-      "line": "The case lifts 52.25 mm to clear the wall cleat."
+      "line": "The case shifts up 52.25 mm to clear the wall cleat flanges, with the latch already released."
     },
     {
       "label": "Grille slots",
@@ -62,7 +62,7 @@
       "label": "Files exported",
       "value": "8 images, 2 videos",
       "path": ".github/workflows/render.yml",
-      "line": "All 10 files are exported again on every push and checked for size and length."
+      "line": "All 10 files are exported again on every push, and the ad sizes and video lengths are checked."
     },
     {
       "label": "Ad sizes",
@@ -79,10 +79,10 @@
   ],
   "pcb": [
     {
-      "label": "Independent fabrication checks",
+      "label": "Fabrication-file checks",
       "value": "26 of 26 pass",
       "path": "reports/independent-fabrication-check.json",
-      "line": "A second tool re-reads the fabrication files: 26 of 26 checks pass."
+      "line": "A separate script re-reads the Gerber and drill files and checks them against the board: 26 of 26 checks pass."
     },
     {
       "label": "KiCad layout rules",
@@ -117,8 +117,8 @@
       "line": "100,000 facilities classified against 2,000 zones in 157 ms (median of 5 runs on one recorded machine)."
     },
     {
-      "label": "Grid index against a direct scan",
-      "value": "191 times faster, identical results: yes",
+      "label": "Grid index against a direct scan, on a sample",
+      "value": "191 times faster on 2,000 points, identical results: yes",
       "path": "docs/evidence/benchmark.json",
       "line": ""
     },
@@ -156,7 +156,7 @@
     },
     {
       "label": "Tests and line coverage",
-      "value": "92 tests, 99.74% of lines",
+      "value": "92 tests (2 skipped while measuring), 99.74% of lines",
       "path": "docs/evidence/coverage.txt",
       "line": ""
     },

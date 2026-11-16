@@ -5,11 +5,11 @@ export const projects = [
     slug: 'sensor', repo: 'cirrus-environment-sensor', widget: 'sensor', thumb: 'assets/img/sensor.jpg',
     title: 'Cirrus C-01 environmental sensor', kind: '3D product design in Blender',
     short: 'A wall-mounted air sensor built as a real assembly.',
-    summary: 'A wall-mounted air sensor modelled as a real assembly: housing, gasket, two circuit boards, a vent cassette and a wall cleat. The drawing sheets are measured from the model itself, not drawn by hand.',
+    summary: 'A wall-mounted air sensor modelled as a real assembly: housing, gasket, two circuit boards, a vent cassette and a wall cleat. The dimensions on the drawing sheets are read from the model itself, not drawn by hand.',
     tryShort: 'Pull it apart, then zoom into the drawings.',
     tryIt: ['Drag the slider, or drag across the picture, to pull the sensor apart.', 'Open Drawing sheets, pick a sheet and zoom in on the gasket detail or the wall cleat.'],
     evidence: [
-      {label: 'Handoff measurements', note: 'Every dimension on the sheets, read from the model', path: 'handoff/measurements.json'},
+      {label: 'Handoff measurements', note: 'The dimensions on the sheets, read from the model', path: 'handoff/measurements.json'},
       {label: 'Check script', note: 'Rebuilds the sheets from the model and fails if they differ', path: 'build_handoff.py'},
       {label: 'README', note: 'What the model includes and what it does not claim', path: 'README.md'}],
     stack: 'Blender 4.5 and Python',
@@ -18,7 +18,7 @@ export const projects = [
   {
     slug: 'lamp', repo: 'formline-articulated-lamp', widget: 'lamp', thumb: 'assets/img/lamp.jpg',
     title: 'Formline articulated desk lamp', kind: '3D product design and motion study in Blender',
-    short: 'A lamp with three driven hinges, every pose checked.',
+    short: 'A lamp with three driven hinges and a sampled range of motion.',
     summary: 'A desk lamp modelled procedurally with three driven hinges. Before anything was rendered, the build checked joint combinations across all three limits and every frame of the motion for framing and cable fit.',
     tryShort: 'Move the lamp through its motion.',
     tryIt: ['Drag the pose slider to move the lamp.', 'Use the buttons to jump to the four named poses and read the reach and height.'],
@@ -37,7 +37,7 @@ export const projects = [
     tryShort: 'Open the ads and play the two story videos.',
     tryIt: ['Open any ad at full size.', 'Play the two story videos. They are silent by design, with type kept clear of platform controls.'],
     evidence: [
-      {label: 'Render check', note: 'GitHub re-exports everything on every push and checks sizes and length', path: '.github/workflows/render.yml'},
+      {label: 'Render check', note: 'GitHub re-exports everything on every push and checks the ad sizes and video lengths', path: '.github/workflows/render.yml'},
       {label: 'Layout script', note: 'All copy, sizes and crops in one file', path: 'render_ads.py'},
       {label: 'Story script', note: 'Timing, crop animation and a decode check for each video', path: 'render_stories.py'}],
     stack: 'Python, Pillow and ffmpeg',
@@ -47,15 +47,15 @@ export const projects = [
     slug: 'pcb', repo: 'industrial-sensor-carrier-pcb', widget: 'pcb', thumb: 'assets/img/pcb.jpg',
     title: 'Meridian four-layer carrier board', kind: 'PCB design in KiCad',
     short: 'A 3.3 V controller board, checked from its fabrication files.',
-    summary: 'A four-layer carrier for a 3.3 V controller with RS-485, SPI, I²C, analog sensing and low-side loads. The view is drawn from the saved KiCad board, and a second tool re-reads the Gerber and drill files to check them against that board.',
+    summary: 'A four-layer carrier for a 3.3 V controller with RS-485, SPI, I²C, analog sensing and low-side loads. The view is drawn from the saved KiCad board, and a separate script re-reads the Gerber and drill files with gerbonara to check them against that board.',
     tryShort: 'Click any track to light up its whole net.',
     tryIt: ['Click a track, pad or via to light up everything on its net.', 'Switch layers, or choose a part from the list to find it on the board.'],
     evidence: [
-      {label: 'Independent fabrication check', note: 'Reads only the files a fabricator receives', path: 'reports/independent-fabrication-check.json'},
+      {label: 'Fabrication-file check', note: 'Reads only the files a fabricator receives', path: 'reports/independent-fabrication-check.json'},
       {label: 'KiCad rule check', note: 'Layout rule results from KiCad 10, including the rules switched off', path: 'reports/drc.json'},
       {label: 'Bring-up plan', note: 'How the first board would be tested', path: 'first-article.md'}],
     stack: 'KiCad 10, Python, shapely and gerbonara',
-    limits: 'A design for prototype review. No board has been built or tested yet; the bring-up plan lists what to measure first. Part numbers have not been checked against manufacturer pages.'
+    limits: 'A design for prototype review. No board has been built or tested yet; the bring-up plan lists what to measure first. The part numbers in the bill of materials are candidates.'
   },
   {
     slug: 'atlas', repo: 'flood-exposure-atlas', widget: 'embed', embed: 'demos/atlas/index.html', thumb: 'assets/img/atlas.jpg',
@@ -74,8 +74,8 @@ export const projects = [
   {
     slug: 'kit', repo: 'geojson-quality-kit', widget: 'geojson', thumb: 'assets/img/kit.jpg',
     title: 'GeoJSON Quality Kit', kind: 'Data cleaning tool in JavaScript',
-    short: 'Cleans GeoJSON and reports every record it rejects.',
-    summary: 'A command-line tool and library that cleans GeoJSON: it normalises ids and labels, checks coordinates and polygon rings, removes duplicates, and lists every rejected record with a reason. It runs here exactly as it does on the command line.',
+    short: 'Cleans GeoJSON and reports the records it rejects, with reasons.',
+    summary: 'A command-line tool and library that cleans GeoJSON: it normalises ids and labels, checks coordinates and polygon rings, removes duplicates, and lists the rejected records with a reason. It runs here exactly as it does on the command line.',
     tryShort: 'Clean a messy file, or paste your own.',
     tryIt: ['Read the issue table for the example file: each rejected record has a rule name, what happened and what to do.', 'Edit the text, paste your own GeoJSON or open a file, then press Clean. Nothing leaves your browser.'],
     evidence: [
@@ -91,9 +91,9 @@ export const projects = [
     short: 'A service desk with sign-in, roles and conflict-safe edits.',
     summary: 'An internal service desk: sign-in with roles, requests with priority and assignee, comments, and edits that cannot silently overwrite each other. The server is TypeScript run directly by Node, with an OpenAPI file and tests that check the API against it.',
     tryShort: 'Watch the real app, then read the API contract.',
-    tryIt: ['Watch the recording: sign in, create, assign, comment, and the same request edited in two windows.', 'Open the OpenAPI file or the tests to see exactly how it behaves.'],
+    tryIt: ['Watch the recording: sign in as a requester and open a request, then as an agent assign it and comment, then see what happens when a colleague saves the same request first.', 'Open the API contract tab to see every route and a real session with the API, then the OpenAPI file or the tests for the detail.'],
     evidence: [
-      {label: 'API contract', note: 'Every route, schema and error, checked against the live server', path: 'openapi.json'},
+      {label: 'API contract', note: 'Every route with its request and response schemas, checked against the running server', path: 'openapi.json'},
       {label: 'Coverage record', note: 'Measured line coverage of the source', path: 'docs/evidence/coverage.txt'},
       {label: 'README', note: 'Security model, decisions and limits', path: 'README.md'}],
     stack: 'TypeScript, Node 24, SQLite, Docker',

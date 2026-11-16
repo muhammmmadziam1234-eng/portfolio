@@ -45,7 +45,7 @@ The tests open every page in a real browser, on a desktop and a phone-sized scre
 
 ## Where the numbers come from
 
-Nothing on a project page states a figure that was typed in by hand. `scripts/sync.mjs` reads each project's own evidence files and writes:
+No figure beside a demo is typed in by hand. `scripts/sync.mjs` reads each project's own evidence files and writes (the descriptive text around the figures is written by hand and was checked against the repositories):
 
 - `data/facts.json`: the figures shown beside each demo, each with the path of the file it came from;
 - `data/sources.json`: the commit of each repository the site was built from.
@@ -83,8 +83,8 @@ export default {
 - **One page, hash addresses.** `#/p/pcb` is the circuit board. A page that is not found falls back to the home page, so a link can never lead nowhere.
 - **Each demo is a small module** in `assets/js/widgets/`. It receives an empty element and fills it, so the page is built once, off screen, and shown when ready. Nothing below a demo moves when it arrives.
 - **The two 3D studies are image sequences** rendered from the projects' own Blender files (`scripts/render/`), because a browser cannot open a Blender file. The pose numbers beside the lamp come from its evidence file, not from the pictures.
-- **The flood map and the paint estimator run as they are.** `demos/` holds an unmodified copy of each repository's web app, so the demo and the repository cannot disagree.
-- **The service desk is shown as a recording**, because it needs a server. The recording is made from the real app by a script in its repository.
+- **The flood map, the GeoJSON cleaner and the paint estimator run as they are.** `demos/` holds each project's own web files, copied unchanged (tests, tooling and documents stay in the repository), so the demo and the repository cannot disagree.
+- **The service desk is shown as a recording**, because it needs a server. `scripts/record-tracker.mjs` in this repository starts the real app from a checkout of the project and drives it in a browser; the recording has a step list and an API tab beside it.
 - **Fonts and motion.** One variable font (Archivo, SIL Open Font Licence, in `assets/fonts`). Motion respects the system's reduced-motion setting, and the slider works without it.
 
 ## Limits

@@ -17,7 +17,7 @@ export default async function sensor(root) {
         alt: 'Drawing sheet: a longitudinal section through the Cirrus C-01 grille, sensor bay, bulkhead feedthrough and main circuit board, with dimensions.'},
       {id: 'mounting', label: 'Wall cleat and rail', src: 'assets/media/sensor/mounting.svg',
         alt: 'Drawing sheet: the Cirrus C-01 wall cleat elevation, rail cross-section and the upward travel needed to release the case, with dimensions.'}],
-    caption: 'These sheets are generated from the model, so every dimension on them was measured, not typed in.'
+    caption: 'These sheets are generated from the model. The dimensions on them are read from it, not typed in.'
   });
   const tabs = makeTabs([
     {label: 'Pull it apart', panel: apart},

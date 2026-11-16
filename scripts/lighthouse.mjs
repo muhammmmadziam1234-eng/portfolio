@@ -8,9 +8,10 @@ import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright-core';
 import lighthouse from 'lighthouse';
 import {serve} from './serve.mjs';
+import {projects} from '../assets/js/projects.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const pages = [['Home', ''], ['Sensor project', '#/p/sensor'], ['PCB project', '#/p/pcb'], ['Lamp project', '#/p/lamp']];
+const pages = [['Home', ''], ...projects.map(p => [p.title, `#/p/${p.slug}`])];
 const port = 9341;
 const server = await serve(0);
 const base = `http://127.0.0.1:${server.address().port}/`;

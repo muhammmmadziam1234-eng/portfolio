@@ -31,7 +31,7 @@ function factLines(slug, count) {
 
 function setChrome(current) {
   $('#site-name').textContent = config.name || 'Portfolio';
-  $('#foot-line').textContent = `© 2026 ${config.name || config.githubUser}. All rights reserved. The fonts and the Gelasio, Barlow, Selawik and Inconsolata typefaces used inside the demos keep their own open licences.`;
+  $('#foot-line').textContent = `© 2026 ${config.name || config.githubUser}. All rights reserved. Archivo (this page) and Gelasio (the flood map and the paint estimator) are open typefaces and keep their own licences.`;
   const upwork = $('#upwork');
   if (config.upworkUrl) { upwork.href = config.upworkUrl; upwork.target = '_blank'; upwork.rel = 'noopener'; upwork.hidden = false; }
   for (const link of document.querySelectorAll('.bar nav a:not(.btn)')) {
@@ -58,11 +58,16 @@ function registerTable() {
     h('tbody', {}, rows));
 }
 
+const countWords = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
 function methodSection(onOwnPage) {
   const sub = onOwnPage ? 'h2' : 'h3';
+  const checked = sources.filter(s => s.ci).length;
+  const ciText = sources.length
+    ? `${countWords[checked] ?? checked} of the ${sources.length} repositories run their checks on GitHub whenever the code changes, and the badge at the top of each of their READMEs shows the latest result. The others are checked by their own build scripts.`
+    : 'Most repositories run their checks on GitHub whenever the code changes, and the badge at the top of each README shows the latest result.';
   const blocks = h('div', {class: 'method'},
-    h('div', {}, h(sub, {}, 'Checks run on every push'), h('p', {}, 'Each repository runs its tests on GitHub whenever the code changes. The badge at the top of each README shows the latest result.')),
-    h('div', {}, h(sub, {}, 'A second tool re-measures'), h('p', {}, 'Where a number matters, something other than the code that produced it checks it: Shapely for the flood map, gerbonara for the PCB fabrication files, a JSON Schema for the cleaner\'s report.')),
+    h('div', {}, h(sub, {}, 'Checks run on every push'), h('p', {}, ciText)),
+    h('div', {}, h(sub, {}, 'A second tool re-checks'), h('p', {}, 'Where a number matters, a second tool checks it: Shapely for the flood map, gerbonara for the PCB fabrication files, a JSON Schema for the cleaner\'s report. The two Blender studies have no second tool; their own build scripts check them.')),
     h('div', {}, h(sub, {}, 'Every figure links to a file'), h('p', {}, 'Numbers here are read from files inside the repositories when this site is built. Each one links to its source, so you can open it and look.')));
   const parts = [h(onOwnPage ? 'h1' : 'h2', onOwnPage ? {tabindex: '-1'} : {}, 'How the numbers are checked'), h('p', {class: 'intro'}, 'A portfolio is easy to polish. These are the three habits that keep the figures honest.'), blocks];
   if (onOwnPage && sources.length) {
