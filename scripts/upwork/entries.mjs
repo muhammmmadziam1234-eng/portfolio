@@ -56,7 +56,7 @@ const copy = {
     title: 'Painting quote builder: multi-room, printable, works offline',
     role: 'Front-end developer: pricing engine, interface, print layout and tests',
     skills: ['JavaScript', 'HTML', 'CSS', 'Progressive Web Apps', 'Web Accessibility'],
-    description: `A quote builder for a fictional painting studio: several rooms, doors and windows, metric or imperial input, prices exact to the cent, saved quotes, a one-page printable quote and offline use. Lighthouse on a simulated phone: ${f('paint', 'Lighthouse (simulated phone)')}. ${f('paint', 'Tests')}; an accessibility scan finds ${f('paint', 'Accessibility scan (axe-core)')}. The tour runs the real app. Fictional rate card.`
+    description: `A quote builder for a fictional painting studio: several rooms, doors and windows, metric or imperial input, prices exact to the cent, saved quotes, a one-page printable quote and offline use. Lighthouse on a simulated phone: ${f('paint', 'Lighthouse page-quality scores (simulated phone)')}. ${f('paint', 'Tests')}; an accessibility scan finds ${f('paint', 'Accessibility scan (axe-core)')}. The tour runs the real app. Fictional rate card.`
   }),
   ads: () => ({
     title: 'Product ad campaigns: square, portrait and vertical story video',
