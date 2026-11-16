@@ -1,0 +1,20 @@
+{"type":"FeatureCollection","features":[
+  {"type":"Feature","id":" clinic-01 ","geometry":{"type":"Point","coordinates":[79.902347821,6.923521104,12.5]},"properties":{"name":" Bay  Clinic ","category":"Health","staff":14}},
+  {"type":"Feature","id":"LIB-02","geometry":{"type":"Point","coordinates":[79.910514,6.930219]},"properties":{"name":"Birch Library","category":"Community"}},
+  {"type":"Feature","id":"CLINIC-01","geometry":{"type":"Point","coordinates":[79.9023,6.9235]},"properties":{"name":"Bay Clinic (copy)","category":"health"}},
+  {"type":"Feature","id":"FIRE-03","geometry":{"type":"Point","coordinates":[181.3,6.92]},"properties":{"name":"Lake Fire Station","category":"Emergency"}},
+  {"type":"Feature","id":"SCH-04","geometry":{"type":"Point","coordinates":[79.9]},"properties":{"name":"Hill School","category":"Education"}},
+  {"type":"Feature","id":"DEP-05","geometry":{"type":"Point","coordinates":[79.9071,6.9188]},"properties":{"name":"   ","category":"Utilities"}},
+  {"type":"Feature","geometry":{"type":"Point","coordinates":[79.9101,6.9211]},"properties":{"name":"Unnamed kiosk","category":"Community"}},
+  {"type":"Feature","id":"WELL-06","geometry":{"type":"MultiPoint","coordinates":[[79.905,6.91],[79.90504,6.91]]},"properties":{"name":"Twin wells","category":"Utilities"}},
+  {"type":"Feature","id":"PATH-07","geometry":{"type":"LineString","coordinates":[[79.9,6.9],[79.9,6.9],[79.904,6.903],[79.908,6.904]]},"properties":{"name":"Beach walk","category":"Transport"}},
+  {"type":"Feature","id":"PATH-08","geometry":{"type":"LineString","coordinates":[[79.91,6.91]]},"properties":{"name":"Stub path","category":"Transport"}},
+  {"type":"Feature","id":"ZONE-09","geometry":{"type":"Polygon","coordinates":[[[79.9,6.9],[79.9,6.92],[79.92,6.92],[79.92,6.9]]]},"properties":{"name":"Estuary floodplain","category":"flood"}},
+  {"type":"Feature","id":"ZONE-10","geometry":{"type":"Polygon","coordinates":[[[79.93,6.9],[79.95,6.92],[79.95,6.9],[79.93,6.92],[79.93,6.9]]]},"properties":{"name":"Bow-tie bay","category":"flood"}},
+  {"type":"Feature","id":"ZONE-11","geometry":{"type":"Polygon","coordinates":[[[79.9,6.95],[79.92,6.95],[79.92,6.97],[79.9,6.97],[79.9,6.95]],[[79.915,6.955],[79.925,6.955],[79.925,6.96],[79.915,6.96],[79.915,6.955]]]},"properties":{"name":"Quarry basin","category":"flood"}},
+  {"type":"Feature","id":"ZONE-12","geometry":{"type":"Polygon","coordinates":[[[79.93,6.95],[79.95,6.95],[79.95,6.97],[79.93,6.97],[79.93,6.95]],[[79.935,6.955],[79.935,6.965],[79.945,6.965],[79.945,6.955],[79.935,6.955]]]},"properties":{"name":"Lake terrace","category":"flood"}},
+  {"type":"Feature","id":"ZONE-13","geometry":{"type":"MultiPolygon","coordinates":[[[[79.96,6.9],[79.97,6.9],[79.97,6.91],[79.96,6.91],[79.96,6.9]]],[[[79.98,6.9],[79.98,6.91],[79.99,6.91],[79.99,6.9],[79.98,6.9]]]]},"properties":{"name":"Reclaimed land","category":"flood"}},
+  {"type":"Feature","id":"GC-14","geometry":{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[79.9,6.9]}]},"properties":{"name":"Mixed bundle","category":"other"}},
+  {"type":"Feature","id":"NULL-15","geometry":null,"properties":{"name":"Planned site","category":"other"}},
+  {"type":"Feature","id":"SEA-17","geometry":{"type":"LineString","coordinates":[[179.8,-16.1],[-179.9,-16.2]]},"properties":{"name":"Island ferry","category":"Transport"}}
+]}

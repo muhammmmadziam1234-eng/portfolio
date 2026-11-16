@@ -1,0 +1,4 @@
+exposure.geojson
+node_modules/
+.venv/
+__pycache__/

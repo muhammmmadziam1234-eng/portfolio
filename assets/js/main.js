@@ -105,7 +105,7 @@ async function renderProject(slug) {
   const page = h('div', {'data-p': slug},
     h('div', {class: 'crumbs'}, h('a', {href: '#/all'}, 'All projects'), h('span', {}, `Project ${index + 1} of ${projects.length}`)),
     h('div', {class: 'stage-head'}, h('h1', {tabindex: '-1'}, p.title), h('p', {class: 'kind'}, p.kind)),
-    h('div', {class: 'stage'}, exhibit,
+    h('div', {class: p.widget === 'embed' ? 'stage wide' : 'stage'}, exhibit,
       h('aside', {class: 'notes', 'aria-label': 'About this project'},
         h('section', {}, h('h2', {}, 'What it is'), h('p', {}, p.summary)),
         h('section', {}, h('h2', {}, 'Try this'), h('ol', {class: 'try'}, p.tryIt.map(t => h('li', {}, h('span', {}, t))))),

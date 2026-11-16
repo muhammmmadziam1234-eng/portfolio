@@ -1,0 +1,85 @@
+{
+  "openapi": "3.1.0",
+  "title": "Relay Desk API",
+  "version": "2.0.0",
+  "operations": [
+    {
+      "method": "GET",
+      "path": "/healthz",
+      "summary": "Liveness: always 200 while the process runs",
+      "needs": "Nothing"
+    },
+    {
+      "method": "GET",
+      "path": "/readyz",
+      "summary": "Readiness: 200 only if the database answers",
+      "needs": "Nothing"
+    },
+    {
+      "method": "GET",
+      "path": "/openapi.json",
+      "summary": "This document",
+      "needs": "Nothing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/login",
+      "summary": "Sign in",
+      "needs": "Nothing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logout",
+      "summary": "Sign out and invalidate the session",
+      "needs": "Session and CSRF token"
+    },
+    {
+      "method": "GET",
+      "path": "/api/session",
+      "summary": "Who am I, and what is my CSRF token",
+      "needs": "Session"
+    },
+    {
+      "method": "GET",
+      "path": "/api/requests",
+      "summary": "List requests, newest activity first",
+      "needs": "Session"
+    },
+    {
+      "method": "POST",
+      "path": "/api/requests",
+      "summary": "Open a request as the signed-in user",
+      "needs": "Session and CSRF token"
+    },
+    {
+      "method": "GET",
+      "path": "/api/requests/{id}",
+      "summary": "Read one request with its history and comments",
+      "needs": "Session"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/requests/{id}",
+      "summary": "Change status, priority and/or assignee (agents and admins)",
+      "needs": "Session and CSRF token"
+    },
+    {
+      "method": "POST",
+      "path": "/api/requests/{id}/comments",
+      "summary": "Add a comment (does not need or change the revision)",
+      "needs": "Session and CSRF token"
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "summary": "List accounts (admins only)",
+      "needs": "Session"
+    },
+    {
+      "method": "GET",
+      "path": "/api/assignees",
+      "summary": "Who a request can be assigned to (agents and admins)",
+      "needs": "Session"
+    }
+  ]
+}

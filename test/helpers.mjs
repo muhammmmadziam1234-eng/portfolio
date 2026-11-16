@@ -19,7 +19,9 @@ export async function open(browser, base, route, {width = 1280, height = 800, re
   page.on('console', m => { if (m.type() === 'error') log.errors.push(m.text()); });
   page.on('request', r => { const u = new URL(r.url()); if (/^https?:$/.test(u.protocol) && u.hostname !== '127.0.0.1') log.outside.push(r.url()); });
   page.on('response', r => { if (r.status() >= 400) log.bad.push(`${r.status()} ${r.url()}`); });
-  await page.goto(base + route, {waitUntil: 'networkidle'});
+  await page.goto(base + route, {waitUntil: 'load'});
+  await page.waitForFunction(() => !document.querySelector('main[aria-busy]') && document.querySelector('main h1'));
+  await page.waitForTimeout(150);
   return {page, context, log};
 }
 

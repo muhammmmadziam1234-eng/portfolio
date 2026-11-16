@@ -214,3 +214,15 @@ main{min-height:100vh;outline:none}
 .bom-wrap{border-top:1px solid var(--rule)}
 .bom-wrap summary{padding:10px 14px;cursor:pointer;font-weight:620}
 .bom-wrap .bom{margin:0 14px 14px}
+.play>.issues{grid-column:1/-1;margin:0 14px 14px;max-height:320px}
+.play .output{max-height:230px}
+.play .opts .btn{white-space:nowrap}
+/* an app shown in a frame gets the whole width, and its notes move underneath in columns */
+.stage.wide{grid-template-columns:minmax(0,1fr)}
+.stage.wide .notes{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:22px 40px}
+.stage.wide .frame{height:min(88vh,900px);min-height:600px}
+.rec{background:#10131a}
+.rec video{width:100%;height:auto;aspect-ratio:16/9;background:#10131a}
+.steps{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
+.steps .chip[aria-current=step]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.code{min-width:0}

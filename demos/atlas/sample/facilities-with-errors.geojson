@@ -1,0 +1,260 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.711,
+     6.999
+    ]
+   },
+   "properties": {
+    "id": "F01",
+    "name": "Canal Clinic",
+    "category": "Health"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.703,
+     7.01
+    ]
+   },
+   "properties": {
+    "id": "F02",
+    "name": "Delta School",
+    "category": "Education"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.72,
+     7.004
+    ]
+   },
+   "properties": {
+    "id": "F03",
+    "name": "Lagoon Pump House",
+    "category": "Utilities"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.736,
+     7.014
+    ]
+   },
+   "properties": {
+    "id": "F04",
+    "name": "East Fire Post",
+    "category": "Emergency"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.728,
+     6.994
+    ]
+   },
+   "properties": {
+    "id": "F05",
+    "name": "Harbour Library",
+    "category": "Community"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.712,
+     7.016
+    ]
+   },
+   "properties": {
+    "id": "F06",
+    "name": "Northgate Clinic",
+    "category": "Health"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.735,
+     7.004
+    ]
+   },
+   "properties": {
+    "id": "F07",
+    "name": "Reed Lane School",
+    "category": "Education"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.75,
+     7.0
+    ]
+   },
+   "properties": {
+    "id": "F08",
+    "name": "Quarry Depot",
+    "category": "Utilities"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.695,
+     6.995
+    ]
+   },
+   "properties": {
+    "id": "F09",
+    "name": "Old Mill Centre",
+    "category": "Community"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.727,
+     6.991
+    ]
+   },
+   "properties": {
+    "id": "F10",
+    "name": "Spit Road Rescue Post",
+    "category": "Emergency"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.725,
+     7.03
+    ]
+   },
+   "properties": {
+    "id": "F11",
+    "name": "Hill School",
+    "category": "Education"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.719,
+     6.998
+    ]
+   },
+   "properties": {
+    "id": "F12",
+    "name": "Weir Control Room",
+    "category": "Utilities"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.71,
+     7.01
+    ]
+   },
+   "properties": {
+    "id": "F05",
+    "name": "Duplicate of F05",
+    "category": "Community"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     190.0,
+     7.0
+    ]
+   },
+   "properties": {
+    "id": "F13",
+    "name": "Offshore Beacon",
+    "category": "Utilities"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     79.714,
+     7.012
+    ]
+   },
+   "properties": {
+    "id": "F14",
+    "category": "Health"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       79.7,
+       7.0
+      ],
+      [
+       79.71,
+       7.0
+      ],
+      [
+       79.71,
+       7.01
+      ],
+      [
+       79.7,
+       7.0
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "id": "F15",
+    "name": "Not a point",
+    "category": "Health"
+   }
+  }
+ ]
+}

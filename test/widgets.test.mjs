@@ -178,3 +178,111 @@ test('the overview table shows figures that come from data/facts.json', async ()
     }
   });
 });
+
+test('atlas: the real app runs in the page, and the scenario switch shows what changes', async () => {
+  await withPage('#/p/atlas', {}, async (page, log) => {
+    const app = page.frameLocator('iframe');
+    await app.getByRole('heading', {name: 'Flood Exposure Atlas', level: 1}).waitFor();
+    assert.match(await app.locator('#count').innerText(), /^16 of 16 facilities shown\. All exposure levels, baseline\./);
+    await app.locator('#scenario').selectOption({label: 'Expanded extent'});
+    assert.match(await app.locator('#scenario-note').innerText(), /^\d+ of 16 facilities change exposure from baseline\./);
+    await app.locator('#filter').selectOption({label: 'High'});
+    assert.match(await app.locator('#count').innerText(), /^\d+ of 16 facilities shown\. High exposure, expanded extent\./);
+    assert.deepEqual(log.errors, []);
+    assert.deepEqual(log.outside, []);
+  });
+});
+
+test('paint: the real app runs in the page and adds a room to the quote', async () => {
+  await withPage('#/p/paint', {}, async (page, log) => {
+    const app = page.frameLocator('iframe');
+    await app.getByRole('heading', {name: 'Plan your next coat.', level: 1}).waitFor();
+    const total = () => app.locator('.total').innerText();
+    const before = await total();
+    assert.match(await app.locator('#summary-note').innerText(), /^1 room\./);
+    await app.getByRole('button', {name: 'Add room'}).click();
+    await page.waitForFunction(() => document.querySelector('iframe').contentDocument.querySelector('#summary-note')?.textContent.startsWith('2 rooms'));
+    assert.notEqual(await total(), before, 'the total changes when a room is added');
+    assert.deepEqual(log.errors, []);
+  });
+});
+
+test('embedded apps open on their own page too', async () => {
+  for (const [slug, title] of [['atlas', /Flood Exposure Atlas/], ['paint', /Second Coat|Plan your next coat/]]) {
+    await withPage(`#/p/${slug}`, {}, async page => {
+      const href = await page.getByRole('link', {name: 'Open on its own page'}).getAttribute('href');
+      const response = await page.request.get(new URL(href, env.base).href);
+      assert.equal(response.status(), 200);
+      assert.match(await response.text(), title);
+    });
+  }
+});
+
+test('kit: the page shows the same numbers the kit itself reports for the example', async () => {
+  const kit = await import('../demos/kit/index.mjs');
+  const example = readFileSync(new URL('../demos/kit/examples/messy.geojson', import.meta.url), 'utf8');
+  const {report} = kit.cleanText(example, {precision: 6, nearMeters: 15});
+  await withPage('#/p/kit', {}, async page => {
+    const tally = await page.locator('.tally').innerText();
+    for (const [label, value] of [['Features in', report.input], ['Kept', report.accepted], ['Rejected', report.rejected], ['Written out', report.output], ['Warnings', report.warnings.length]])
+      assert.match(tally.replace(/\s+/g, ' '), new RegExp(`${label} ${value}\\b`), label);
+    const rows = await page.locator('.issues tbody tr').count();
+    assert.equal(rows, Math.min(200, report.issues.length + report.warnings.length));
+    assert.match(await page.locator('.issues').innerText(), /duplicate_id/);
+  });
+});
+
+test('kit: broken JSON is explained and the cursor is put where it breaks; bad options are refused', async () => {
+  await withPage('#/p/kit', {}, async page => {
+    await page.locator('#kit-input').fill('{"type":"FeatureCollection","features":[{"type":"Feature",,}]}');
+    await page.getByRole('button', {name: 'Clean', exact: true}).click();
+    assert.match(await page.locator('.status').innerText(), /line 1, column \d+/);
+    assert.equal(await page.locator('.tally').isHidden(), true);
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'kit-input');
+    await page.locator('#kit-input').fill('{"type":"FeatureCollection","features":[]}');
+    await page.locator('#kit-precision').fill('12');
+    await page.getByRole('button', {name: 'Clean', exact: true}).click();
+    assert.match(await page.locator('.status').innerText(), /Decimal places must be a whole number from 0 to 8/);
+    await page.locator('#kit-precision').fill('4');
+    await page.getByRole('button', {name: 'Clean', exact: true}).click();
+    assert.match(await page.locator('.status').innerText(), /0 of 0 features kept/);
+    await page.getByRole('button', {name: 'Use the example'}).click();
+    assert.match(await page.locator('#kit-input').inputValue(), /CLINIC-01/);
+  });
+});
+
+test('kit: the cleaned file and the report can be downloaded', async () => {
+  await withPage('#/p/kit', {}, async page => {
+    const [cleaned] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', {name: 'Download cleaned file'}).click()]);
+    assert.equal(cleaned.suggestedFilename(), 'cleaned.geojson');
+    const [report] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', {name: 'Download report'}).click()]);
+    assert.equal(report.suggestedFilename(), 'report.json');
+    assert.equal(JSON.parse(readFileSync(await report.path(), 'utf8')).schemaVersion, 2);
+  });
+});
+
+test('tracker: the recording has a step list that jumps in the video, and a contract tab from the OpenAPI file', async () => {
+  const {steps} = json('data/tracker-steps.json'), api = json('data/tracker-api.json');
+  await withPage('#/p/tracker', {}, async page => {
+    const buttons = page.locator('.steps button');
+    assert.equal(await buttons.count(), steps.length);
+    await buttons.nth(4).click();
+    await page.waitForFunction(at => document.querySelector('video').currentTime >= at - 0.2, steps[4].at, {timeout: 5000});
+    await page.evaluate(() => document.querySelector('video').pause());
+    assert.equal(await page.locator('video').getAttribute('aria-describedby'), 'rec-steps');
+    assert.equal(await page.locator('video').getAttribute('autoplay'), null);
+    await page.getByRole('tab', {name: 'API contract'}).click();
+    assert.equal(await page.locator('.issues tbody tr').count(), api.operations.length);
+    assert.match(await page.locator('.issues').innerText(), /POST\s+\/api\/login/);
+    assert.match(await page.locator('pre.code').innerText(), /curl/);
+  });
+});
+
+test('every project has a thumbnail, and every file the pages point at exists', async () => {
+  const {projects} = await import('../assets/js/projects.js');
+  const {existsSync} = await import('node:fs');
+  for (const p of projects) {
+    assert.ok(existsSync(new URL(`../${p.thumb}`, import.meta.url)), p.thumb);
+    if (p.embed) assert.ok(existsSync(new URL(`../${p.embed}`, import.meta.url)), p.embed);
+  }
+});

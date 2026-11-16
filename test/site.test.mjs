@@ -43,7 +43,7 @@ test('moving between projects keeps the tour order and announces the new page', 
   const {page, context} = await open(env.browser, env.base, '#/p/sensor', {reducedMotion: 'reduce'});
   try {
     await page.getByRole('link', {name: /Next project/}).click();
-    await page.waitForFunction(() => location.hash === '#/p/lamp');
+    await page.waitForFunction(() => location.hash === '#/p/lamp' && /lamp/i.test(document.querySelector('main h1')?.textContent ?? ''));
     assert.match(await page.locator('h1').innerText(), /lamp/i);
     await page.waitForFunction(() => document.activeElement?.tagName === 'H1');
     await page.waitForFunction(() => document.querySelector('#live').textContent.includes('project 2 of 8'));

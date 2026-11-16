@@ -6,8 +6,8 @@
 //   --strict   stop if a checkout has uncommitted changes (use before publishing)
 import {execFileSync} from 'node:child_process';
 import {copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync} from 'node:fs';
-import {dirname, join, relative, resolve} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {dirname, join, relative, resolve, sep} from 'node:path';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import {projects} from '../assets/js/projects.js';
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -18,6 +18,8 @@ const only = (option('only', '') || '').split(',').filter(Boolean);
 const strict = args.includes('--strict');
 const num = n => Number(n).toLocaleString('en-GB');
 const problems = [];
+// Not part of a demo's running app: tests, tooling, docs and evidence stay in the repository.
+const demoSkip = new Set(['.git', '.github', 'node_modules', 'test', 'e2e', 'validation', 'scripts', 'docs', 'package.json', 'package-lock.json', 'tsconfig.json', 'README.md', 'benchmark.mjs', 'analyze.mjs', 'serve.mjs', 'exposure.geojson']);
 
 function openRepo(name) {
   const dir = join(reposDir, name);
@@ -98,6 +100,87 @@ const extractors = {
       {label: 'Story videos', value: `${length.join(', ')} s, ${dims.join(', ')}, ${frames.join(', ')} frames`, path: 'render_stories.py', line: ''}
     ];
   },
+  atlas(repo) {
+    const e = 'docs/evidence/', cc = repo.json(e + 'crosscheck.json'), bm = repo.json(e + 'benchmark.json'), mu = repo.json(e + 'crosscheck-mutants.json');
+    const ax = repo.json(e + 'accessibility.json'), cov = repo.text(e + 'coverage.txt');
+    repo.copy('.', 'demos/atlas', rel => !demoSkip.has(rel.split(sep)[0]) || rel === '');
+    const lines = file => Number(cov.match(new RegExp(`^${file.replace('.', '\\.')}\\s*\\|\\s*([\\d.]+)`, 'm'))?.[1]);
+    const caught = mu.mutants.filter(m => m.caught).length, big = bm.scene, run = bm.indexedFullRun, direct = bm.directScanSubset;
+    return [
+      {label: 'Cross-check against Shapely', value: `${num(cc.pairs)} point-and-zone pairs, ${cc.disagreements} disagreements`, path: e + 'crosscheck.json',
+        line: `Checked against Shapely on ${num(cc.pairs)} point-and-polygon pairs: ${cc.disagreements} disagreements.`},
+      {label: 'Large run', value: `${num(big.points)} facilities against ${num(big.polygons)} zones in ${run.medianMs} ms`, path: e + 'benchmark.json',
+        line: `${num(big.points)} facilities classified against ${num(big.polygons)} zones in ${run.medianMs} ms (median of ${run.runs} runs on one recorded machine).`},
+      {label: 'Grid index against a direct scan', value: `${Math.round(direct.gridSpeedupAtMedian)} times faster, identical results: ${direct.identicalResults ? 'yes' : 'no'}`, path: e + 'benchmark.json', line: ''},
+      {label: 'Broken copies of the engine caught', value: `${caught} of ${mu.mutants.length}`, path: e + 'crosscheck-mutants.json', line: ''},
+      {label: 'Line coverage of the engine and the import checks', value: `${lines('geo.mjs')}% and ${lines('validate.mjs')}%`, path: e + 'coverage.txt', line: ''},
+      {label: 'Accessibility scan (axe-core)', value: `${ax.views.reduce((n, v) => n + v.violations, 0)} violations in ${ax.views.length} views`, path: e + 'accessibility.json', line: ''}
+    ];
+  },
+  paint(repo) {
+    const e = 'docs/evidence/', lh = repo.json(e + 'lighthouse.json'), ax = repo.json(e + 'axe.json'), pr = repo.json(e + 'print.json'), t = repo.json(e + 'tests.json'), cov = repo.text(e + 'coverage.txt');
+    repo.copy('.', 'demos/paint', rel => !demoSkip.has(rel.split(sep)[0]) || rel === '');
+    const lines = file => Number(cov.match(new RegExp(`^${file.replace('.', '\\.')}\\s*\\|\\s*([\\d.]+)`, 'm'))?.[1]);
+    const sc = lh.medianScores;
+    return [
+      {label: 'Lighthouse (simulated phone)', value: `${sc.performance} performance, ${sc.accessibility} accessibility, ${sc['best-practices']} best practices, ${sc.seo} SEO`, path: e + 'lighthouse.json',
+        line: `Lighthouse on a simulated phone: ${sc.performance}, ${sc.accessibility}, ${sc['best-practices']} and ${sc.seo} for performance, accessibility, best practices and SEO.`},
+      {label: 'Tests', value: `${t.unit.pass} unit and ${t.e2e.pass} browser tests pass`, path: e + 'tests.json',
+        line: `${t.unit.pass} unit and ${t.e2e.pass} browser tests pass; the pricing engine has ${lines('quote.mjs')}% line coverage.`},
+      {label: 'Accessibility scan (axe-core)', value: `${ax.scenarios.reduce((n, s) => n + s.violations, 0)} violations in ${ax.scenarios.length} scenarios, print view included`, path: e + 'axe.json', line: ''},
+      {label: 'Printed quote', value: `${pr.typicalQuote.rooms} rooms on ${pr.typicalQuote.pages} A4 page; ${pr.largestQuote.rooms} rooms with every option take ${pr.largestQuote.pages}`, path: e + 'print.json', line: ''}
+    ];
+  },
+  async kit(repo) {
+    const e = 'docs/evidence/', bm = repo.json(e + 'benchmark.json'), cov = repo.text(e + 'coverage.txt'), atlas = repo.text(e + 'atlas-check.txt');
+    // Only the files that run in a browser. The command line and the streaming reader use Node's own modules and stay in the repository.
+    rmSync(join(site, 'demos/kit'), {recursive: true, force: true});
+    for (const file of ['index.mjs', 'quality.mjs', 'lib', 'examples/messy.geojson']) repo.copy(file, `demos/kit/${file}`);
+    const tests = cov.match(/tests (\d+), pass (\d+), fail (\d+), skipped (\d+); line coverage ([\d.]+)%/);
+    const kept = {features: 0, accepted: 0}, raw = {features: 0, accepted: 0};
+    for (const line of atlas.split('\n')) {
+      const m = line.match(/^(?:facilities|zones) (after the kit|straight from the raw file).*: (\d+) features, (\d+) accepted/);
+      if (m) { const t = m[1] === 'after the kit' ? kept : raw; t.features += Number(m[2]); t.accepted += Number(m[3]); }
+    }
+    const {ISSUE_CODES} = await import(pathToFileURL(join(repo.dir, 'index.mjs')).href);
+    return [
+      {label: 'Large file, streamed', value: `${num(bm.data.records)} records (${bm.data.fileMB} MB) in ${bm.pipeline.seconds} s, ${bm.pipeline.peakRssMB} MB of memory`, path: e + 'benchmark.json',
+        line: `Streams ${num(bm.data.records)} records (${bm.data.fileMB} MB) in ${bm.pipeline.seconds} s using ${bm.pipeline.peakRssMB} MB of memory (one recorded machine).`},
+      {label: "Output accepted by the flood atlas's own validator", value: `${kept.accepted} of ${kept.features} features, against ${raw.accepted} of ${raw.features} before cleaning`, path: e + 'atlas-check.txt',
+        line: `Cleaned output is accepted by the flood atlas's own validator: ${kept.accepted} of ${kept.features} features, against ${raw.accepted} of ${raw.features} before cleaning.`},
+      {label: 'Tests and line coverage', value: `${tests[1]} tests, ${tests[5]}% of lines`, path: e + 'coverage.txt', line: ''},
+      {label: 'Rule codes with a stable name and a fix', value: `${Object.keys(ISSUE_CODES).length}`, path: 'lib/codes.mjs', line: ''}
+    ];
+  },
+  tracker(repo) {
+    const e = 'docs/evidence/', cov = repo.text(e + 'coverage.txt'), e2e = repo.text(e + 'e2e.txt'), audit = repo.text(e + 'audit.txt'), api = repo.json('openapi.json'), pkg = repo.json('package.json');
+    repo.copy(e + 'curl-session.txt', 'data/tracker-curl.txt');
+    // The API panel lists the operations a client would call, read from the OpenAPI file; the static page routes are left out.
+    const operations = [];
+    for (const [path, item] of Object.entries(api.paths)) {
+      for (const [method, op] of Object.entries(item)) {
+        if (!['get', 'post', 'put', 'patch', 'delete'].includes(method)) continue;
+        if (!(path.startsWith('/api/') || ['/healthz', '/readyz', '/openapi.json'].includes(path))) continue;
+        const needs = Object.keys(op.security?.[0] ?? {});
+        operations.push({method: method.toUpperCase(), path, summary: op.summary, needs: needs.includes('csrfToken') ? 'Session and CSRF token' : needs.includes('sessionCookie') ? 'Session' : 'Nothing'});
+      }
+    }
+    writeFileSync(join(site, 'data/tracker-api.json'), JSON.stringify({openapi: api.openapi, title: api.info.title, version: api.info.version, operations}, null, 2) + '\n');
+    const total = Object.values(api.paths).reduce((n, item) => n + Object.keys(item).filter(m => ['get', 'post', 'put', 'patch', 'delete'].includes(m)).length, 0);
+    const tests = cov.match(/Tests: (\d+) run, (\d+) passed, (\d+) failed/), line = cov.match(/Line coverage ([\d.]+)% of code lines against a gate of (\d+)%/);
+    const contract = Number(cov.match(/total contract: (\d+)/)?.[1]), browser = e2e.match(/tests (\d+)\s+\S*\s*pass (\d+)/);
+    const vulns = audit.match(/found (\d+) vulnerabilit/), deps = Object.keys(pkg.dependencies ?? {}).length;
+    if (!tests || !line || !contract || !browser || !vulns) throw new Error('A figure was not found in the tracker evidence files; their format may have changed.');
+    return [
+      {label: 'Tests', value: `${tests[2]} pass, plus ${browser[2]} browser tests`, path: e + 'coverage.txt',
+        line: `${tests[2]} tests and ${browser[2]} browser tests pass; ${line[1]}% of the code is covered (gate ${line[2]}%).`},
+      {label: 'API contract', value: `OpenAPI ${api.openapi}, ${total} operations, ${contract} contract tests`, path: 'openapi.json',
+        line: `Described in OpenAPI ${api.openapi} (${total} operations); ${contract} contract tests check the running server against it.`},
+      {label: 'Line coverage of src/', value: `${line[1]}% of code lines, gate ${line[2]}%`, path: e + 'coverage.txt', line: ''},
+      {label: 'Known vulnerabilities in what ships (npm audit)', value: vulns[1], path: e + 'audit.txt', line: ''},
+      {label: 'Runtime dependencies', value: String(deps), path: 'package.json', line: ''}
+    ];
+  },
   pcb(repo) {
     const check = repo.json('reports/independent-fabrication-check.json'), drc = repo.json('reports/drc.json');
     const passed = check.checks.filter(c => c.passed).length, total = check.checks.length, m = check.measured;
@@ -123,7 +206,7 @@ for (const project of projects) {
   const extract = extractors[project.slug];
   if (!extract) { console.warn(`${project.slug}: no extractor yet, so no figures are shown for it`); facts[project.slug] = []; continue; }
   const repo = openRepo(project.repo);
-  facts[project.slug] = extract(repo);
+  facts[project.slug] = await extract(repo);
   for (const f of facts[project.slug]) if (f.path) repo.used.add(f.path);
   for (const e of project.evidence) if (!repo.has(e.path)) problems.push(`${project.slug}: evidence file ${e.path} is not in ${project.repo}`);
   for (const f of facts[project.slug]) if (f.path && !repo.has(f.path)) problems.push(`${project.slug}: fact file ${f.path} is not in ${project.repo}`);

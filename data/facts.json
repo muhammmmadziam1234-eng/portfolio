@@ -103,8 +103,126 @@
       "line": ""
     }
   ],
-  "atlas": [],
-  "kit": [],
-  "tracker": [],
-  "paint": []
+  "atlas": [
+    {
+      "label": "Cross-check against Shapely",
+      "value": "760,667 point-and-zone pairs, 0 disagreements",
+      "path": "docs/evidence/crosscheck.json",
+      "line": "Checked against Shapely on 760,667 point-and-polygon pairs: 0 disagreements."
+    },
+    {
+      "label": "Large run",
+      "value": "100,000 facilities against 2,000 zones in 157 ms",
+      "path": "docs/evidence/benchmark.json",
+      "line": "100,000 facilities classified against 2,000 zones in 157 ms (median of 5 runs on one recorded machine)."
+    },
+    {
+      "label": "Grid index against a direct scan",
+      "value": "191 times faster, identical results: yes",
+      "path": "docs/evidence/benchmark.json",
+      "line": ""
+    },
+    {
+      "label": "Broken copies of the engine caught",
+      "value": "6 of 6",
+      "path": "docs/evidence/crosscheck-mutants.json",
+      "line": ""
+    },
+    {
+      "label": "Line coverage of the engine and the import checks",
+      "value": "100% and 100%",
+      "path": "docs/evidence/coverage.txt",
+      "line": ""
+    },
+    {
+      "label": "Accessibility scan (axe-core)",
+      "value": "0 violations in 5 views",
+      "path": "docs/evidence/accessibility.json",
+      "line": ""
+    }
+  ],
+  "kit": [
+    {
+      "label": "Large file, streamed",
+      "value": "1,050,000 records (200.7 MB) in 12.81 s, 274 MB of memory",
+      "path": "docs/evidence/benchmark.json",
+      "line": "Streams 1,050,000 records (200.7 MB) in 12.81 s using 274 MB of memory (one recorded machine)."
+    },
+    {
+      "label": "Output accepted by the flood atlas's own validator",
+      "value": "13 of 13 features, against 2 of 20 before cleaning",
+      "path": "docs/evidence/atlas-check.txt",
+      "line": "Cleaned output is accepted by the flood atlas's own validator: 13 of 13 features, against 2 of 20 before cleaning."
+    },
+    {
+      "label": "Tests and line coverage",
+      "value": "92 tests, 99.74% of lines",
+      "path": "docs/evidence/coverage.txt",
+      "line": ""
+    },
+    {
+      "label": "Rule codes with a stable name and a fix",
+      "value": "24",
+      "path": "lib/codes.mjs",
+      "line": ""
+    }
+  ],
+  "tracker": [
+    {
+      "label": "Tests",
+      "value": "156 pass, plus 12 browser tests",
+      "path": "docs/evidence/coverage.txt",
+      "line": "156 tests and 12 browser tests pass; 99.6% of the code is covered (gate 85%)."
+    },
+    {
+      "label": "API contract",
+      "value": "OpenAPI 3.1.0, 18 operations, 21 contract tests",
+      "path": "openapi.json",
+      "line": "Described in OpenAPI 3.1.0 (18 operations); 21 contract tests check the running server against it."
+    },
+    {
+      "label": "Line coverage of src/",
+      "value": "99.6% of code lines, gate 85%",
+      "path": "docs/evidence/coverage.txt",
+      "line": ""
+    },
+    {
+      "label": "Known vulnerabilities in what ships (npm audit)",
+      "value": "0",
+      "path": "docs/evidence/audit.txt",
+      "line": ""
+    },
+    {
+      "label": "Runtime dependencies",
+      "value": "0",
+      "path": "package.json",
+      "line": ""
+    }
+  ],
+  "paint": [
+    {
+      "label": "Lighthouse (simulated phone)",
+      "value": "99 performance, 100 accessibility, 100 best practices, 100 SEO",
+      "path": "docs/evidence/lighthouse.json",
+      "line": "Lighthouse on a simulated phone: 99, 100, 100 and 100 for performance, accessibility, best practices and SEO."
+    },
+    {
+      "label": "Tests",
+      "value": "68 unit and 20 browser tests pass",
+      "path": "docs/evidence/tests.json",
+      "line": "68 unit and 20 browser tests pass; the pricing engine has 100% line coverage."
+    },
+    {
+      "label": "Accessibility scan (axe-core)",
+      "value": "0 violations in 6 scenarios, print view included",
+      "path": "docs/evidence/axe.json",
+      "line": ""
+    },
+    {
+      "label": "Printed quote",
+      "value": "3 rooms on 1 A4 page; 10 rooms with every option take 3",
+      "path": "docs/evidence/print.json",
+      "line": ""
+    }
+  ]
 }

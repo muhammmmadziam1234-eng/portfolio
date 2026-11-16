@@ -1,0 +1,33 @@
+{
+  "seconds": 33.8,
+  "steps": [
+    {
+      "at": 0,
+      "text": "Sign in as a requester"
+    },
+    {
+      "at": 5.4,
+      "text": "Open a new request"
+    },
+    {
+      "at": 14.5,
+      "text": "Sign in as an agent"
+    },
+    {
+      "at": 18.3,
+      "text": "Set priority, assignee and status"
+    },
+    {
+      "at": 21.5,
+      "text": "Add a comment"
+    },
+    {
+      "at": 26,
+      "text": "Two people edit the same request"
+    },
+    {
+      "at": 30.2,
+      "text": "The page shows the other change instead of overwriting it"
+    }
+  ]
+}

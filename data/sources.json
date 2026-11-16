@@ -18,5 +18,25 @@
     "repo": "industrial-sensor-carrier-pcb",
     "commit": "7973cf1aaa14a79593e132b6b1a5794010cbf8b3",
     "files": 4
+  },
+  {
+    "repo": "flood-exposure-atlas",
+    "commit": "71b283abf528c87932cfb8b74ece8915e38f5657",
+    "files": 22
+  },
+  {
+    "repo": "geojson-quality-kit",
+    "commit": "cfc0ad3c2cca7b8c712ec313c9e7793939589e44",
+    "files": 16
+  },
+  {
+    "repo": "service-request-tracker",
+    "commit": "de7a4581d7d072a5fcfa6cd378d9fbef719287a6",
+    "files": 6
+  },
+  {
+    "repo": "room-paint-estimator",
+    "commit": "95f8f9873002ba8e29b43a5fa70a6246c75ecde5",
+    "files": 28
   }
 ]

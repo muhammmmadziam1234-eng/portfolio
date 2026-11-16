@@ -77,7 +77,7 @@ export const projects = [
     short: 'Cleans GeoJSON and reports every record it rejects.',
     summary: 'A command-line tool and library that cleans GeoJSON: it normalises ids and labels, checks coordinates and polygon rings, removes duplicates, and lists every rejected record with a reason. It runs here exactly as it does on the command line.',
     tryShort: 'Clean a messy file, or paste your own.',
-    tryIt: ['Press Clean on the example and read the issue table.', 'Paste your own GeoJSON or drop a file. Nothing leaves your browser.'],
+    tryIt: ['Read the issue table for the example file: each rejected record has a rule name, what happened and what to do.', 'Edit the text, paste your own GeoJSON or open a file, then press Clean. Nothing leaves your browser.'],
     evidence: [
       {label: 'Report format', note: 'JSON Schema for the report, checked by a test', path: 'report.schema.json'},
       {label: 'Benchmark', note: 'Large-file timings with the machine they were measured on', path: 'docs/evidence/benchmark.json'},

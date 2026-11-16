@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<title>Flood Exposure Atlas | Alder Coast</title>
+<meta name="description" content="Explore a fictional flood scenario, or import your own facilities and flood zones, and see how facilities intersect with modeled exposure zones.">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="mast">
+  <div class="brand"><span class="mark" aria-hidden="true">≋</span>Alder Coast <span class="brand-sub">/ Field atlas</span></div>
+  <span class="sample" id="source-badge">Fictional study area</span>
+</header>
+<main>
+<div class="intro">
+  <div><h1>Flood Exposure Atlas</h1><p>See which public facilities intersect with the flood scenario.</p></div>
+  <div class="exports">
+    <button id="export" class="primary" type="button">Download GeoJSON</button>
+    <button id="export-csv" class="secondary" type="button">Download CSV</button>
+  </div>
+</div>
+
+<section class="import" aria-labelledby="import-title">
+  <div class="import-head">
+    <h2 id="import-title">Use your own data</h2>
+    <p>Choose or drop a GeoJSON file for either layer. Files are read in this browser and are not uploaded. Limits: 5 MB and 100,000 features per file.</p>
+    <button id="reset-sample" class="secondary" type="button">Reset to sample</button>
+  </div>
+  <div class="drops">
+    <div class="drop" id="drop-facilities">
+      <label for="file-facilities">Facilities file</label>
+      <input id="file-facilities" type="file" accept=".geojson,.json,application/geo+json,application/json" aria-describedby="hint-facilities">
+      <span class="hint" id="hint-facilities">Point features with string id, name and category. Drop a file here.</span>
+    </div>
+    <div class="drop" id="drop-zones">
+      <label for="file-zones">Zones file</label>
+      <input id="file-zones" type="file" accept=".geojson,.json,application/geo+json,application/json" aria-describedby="hint-zones">
+      <span class="hint" id="hint-zones">Polygon or MultiPolygon features with name and level (low, moderate, high). Drop a file here.</span>
+    </div>
+  </div>
+  <div class="run" id="run" hidden>
+    <progress id="progress" max="100" value="0" aria-label="Analysis progress"></progress>
+    <span id="run-text"></span>
+    <button id="cancel" class="secondary" type="button">Cancel</button>
+  </div>
+  <p id="import-status" class="import-status" role="status"></p>
+  <section id="problems" class="problems" aria-labelledby="problems-title" hidden>
+    <h3 id="problems-title">Rejected features</h3>
+    <p id="problems-summary"></p>
+    <div class="problem-scroll" tabindex="0" role="region" aria-label="List of rejected features">
+      <table>
+        <thead><tr><th scope="col">Layer</th><th scope="col">Feature index (from 0)</th><th scope="col">Field</th><th scope="col">Problem</th></tr></thead>
+        <tbody id="problem-rows"></tbody>
+      </table>
+    </div>
+    <p class="scroll-hint">On a narrow screen, scroll the table sideways to see every column.</p>
+  </section>
+</section>
+
+<div class="atlas">
+<section class="sheet" aria-label="Map and exposure legend">
+<div class="mapbar"><strong id="map-heading">Lower Alder watershed</strong><label class="scenario">Flood scenario <select id="scenario"><option value="baseline">Baseline</option><option value="expanded">Expanded extent</option></select></label></div>
+<p id="map-note" class="map-note" hidden></p>
+<div class="map-wrap">
+<svg id="map" role="img" aria-labelledby="map-title" viewBox="0 0 1000 680"><title id="map-title">Fictional Lower Alder watershed map. Select a facility in the list to locate it.</title></svg>
+<div id="markers" class="markers" role="group" aria-label="Facilities on the map"></div>
+<div class="zoom" role="group" aria-label="Map zoom"><button id="zoom-in" type="button" aria-label="Zoom in">+</button><button id="zoom-out" type="button" aria-label="Zoom out">−</button><button id="reset" type="button" aria-label="Reset map view">↺</button></div>
+</div>
+<div class="legend"><strong>Exposure</strong><span><i class="sw high"></i>High</span><span><i class="sw moderate"></i>Moderate</span><span><i class="sw low"></i>Low</span><span><i class="sw outside"></i>Outside</span></div>
+</section>
+<aside class="rail" aria-label="Facility explorer">
+<div class="rail-head"><div class="rail-title"><h2>Facilities</h2></div>
+<label class="filter">Exposure level <select id="filter"><option value="all">All levels</option><option value="high">High</option><option value="moderate">Moderate</option><option value="low">Low</option><option value="outside">Outside</option></select></label>
+<label class="layers"><input id="zones" type="checkbox" checked> Show flood zones</label>
+<p id="count" class="count" role="status"></p></div>
+<p id="scenario-note" class="scenario-note" role="status"></p><div id="facilities" class="list" role="group" aria-label="Matching facilities"></div>
+<div class="detail" id="detail" aria-live="polite"></div>
+</aside>
+</div>
+
+<section id="comparison" class="compare" aria-labelledby="comparison-title">
+  <h2 id="comparison-title">Scenario comparison</h2>
+  <p id="comparison-note" class="compare-note"></p>
+  <div class="compare-grid">
+    <table id="counts"></table>
+    <table id="changes"></table>
+  </div>
+</section>
+<footer>Illustrative dataset. This map is a portfolio demo and must not be used for planning or emergency decisions.</footer>
+</main><script type="module" src="./app.mjs"></script>
+</body></html>
