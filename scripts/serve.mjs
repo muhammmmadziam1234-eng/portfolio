@@ -18,6 +18,8 @@ export function serve(port = 0) {
       if (path.endsWith('/')) path += 'index.html';
       const file = normalize(join(root, path));
       if (file !== root && !file.startsWith(root + sep)) { res.writeHead(403).end('Forbidden'); return; }
+      // A folder asked for without its slash (p/atlas) is sent to p/atlas/, as GitHub Pages does.
+      if (existsSync(file) && statSync(file).isDirectory()) { res.writeHead(301, {location: `${path}/`}).end(); return; }
       if (!existsSync(file) || !statSync(file).isFile()) { res.writeHead(404, {'content-type': 'text/plain'}).end('Not found'); return; }
       const size = statSync(file).size, type = types[extname(file)] ?? 'application/octet-stream';
       const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '');
