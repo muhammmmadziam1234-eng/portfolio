@@ -24,6 +24,8 @@
 <link rel="modulepreload" href="assets/js/media.js">
 <link rel="modulepreload" href="assets/js/widgets/scrubber.js">
 <link rel="modulepreload" href="site.config.js">
+<link rel="preload" href="data/facts.json" as="fetch" crossorigin>
+<link rel="preload" href="data/sources.json" as="fetch" crossorigin>
 <script>
   // Only the home address shows the first sensor picture straight away, so only it asks for it early.
   if (!location.hash || /^#\/?(all|contact)?$/.test(location.hash)) {

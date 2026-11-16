@@ -14,8 +14,7 @@ let cleanup = () => {};
 
 async function loadData() {
   const get = async name => { try { const r = await fetch(`data/${name}`); return r.ok ? await r.json() : null; } catch { return null; } };
-  facts = (await get('facts.json')) ?? {};
-  sources = (await get('sources.json')) ?? [];
+  [facts, sources] = await Promise.all([get('facts.json').then(d => d ?? {}), get('sources.json').then(d => d ?? [])]);
 }
 
 function route() {
@@ -73,9 +72,15 @@ const tags = list => h('ul', {class: 'tags', 'aria-label': 'Tools'}, list.map(t 
 const sectionHead = (eyebrow, title, intro, id) => h('div', {class: 'section-head'},
   h('p', {class: 'eyebrow'}, eyebrow), h('h2', id ? {id, tabindex: '-1'} : {}, title), intro ? h('p', {class: 'intro'}, intro) : null);
 
+// Card pictures wait until the page's main content has painted, so they never compete with it for the network.
+const picture = (src, width = 960, height = 720) => h('img', {'data-src': src, alt: '', width, height, loading: 'lazy', decoding: 'async'});
+const releasePictures = () => requestAnimationFrame(() => requestAnimationFrame(() => {
+  for (const img of main.querySelectorAll('img[data-src]')) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
+}));
+
 function card(p) {
   return h('article', {class: 'card'},
-    h('div', {class: 'card-media'}, h('img', {src: p.thumb, alt: '', width: 960, height: 720, loading: 'lazy', decoding: 'async'})),
+    h('div', {class: 'card-media'}, picture(p.thumb)),
     h('div', {class: 'card-body'},
       h('p', {class: 'card-kind'}, p.kind),
       h('h4', {class: 'card-title'}, h('a', {href: `#/p/${p.slug}`}, p.title)),
@@ -86,7 +91,7 @@ function card(p) {
 function feature(p) {
   const figure = (facts[p.slug] ?? [])[0];
   return h('article', {class: 'feature'},
-    h('div', {class: 'feature-media'}, h('img', {src: p.thumb, alt: '', width: 960, height: 720, loading: 'lazy', decoding: 'async'})),
+    h('div', {class: 'feature-media'}, picture(p.thumb)),
     h('div', {class: 'feature-body'},
       h('p', {class: 'card-kind'}, p.kind),
       h('h3', {class: 'feature-title'}, h('a', {href: `#/p/${p.slug}`}, p.title)),
@@ -152,6 +157,8 @@ function renderHome(current) {
     caption: 'Cirrus C-01, rendered from the project\'s Blender file. Drag the picture or the slider.'
   });
   cleanup = () => scrub.destroy();
+  const hero = stage.querySelector('img');
+  if (hero && !hero.complete) { hero.addEventListener('load', releasePictures, {once: true}); hero.addEventListener('error', releasePictures, {once: true}); } else releasePictures();
   setMeta(`${siteName}${config.role ? `: ${config.role.charAt(0).toLowerCase()}${config.role.slice(1)}` : ''}`,
     `${config.tagline || 'Eight projects you can try in the browser.'} Eight projects you can try in the browser, from a flood exposure map to a four-layer circuit board.`);
 }
@@ -209,7 +216,7 @@ async function renderProject(slug) {
   const exhibit = h('div', {class: 'exhibit'});
   const figures = facts[slug] ?? [];
   const pagerCard = (q, which) => h('a', {class: `pager-card ${which}`, href: `#/p/${q.slug}`, rel: which},
-    h('img', {src: q.thumb, alt: '', width: 160, height: 120, loading: 'lazy', decoding: 'async'}),
+    picture(q.thumb, 160, 120),
     h('span', {}, h('small', {}, which === 'prev' ? 'Previous project' : 'Next project'), h('strong', {}, q.title)));
   const page = h('div', {},
     h('section', {class: 'project-head'}, h('div', {class: 'container'},
@@ -248,6 +255,7 @@ async function renderProject(slug) {
   }
   main.replaceChildren(page);
   main.removeAttribute('aria-busy');
+  releasePictures();
 }
 
 /* ---------- router ---------- */

@@ -28,7 +28,7 @@ for (const [name, route] of pages) {
   console.log(`${name}: performance ${r.performance}, accessibility ${r.accessibility}, best practices ${r.bestPractices}, SEO ${r.seo} | FCP ${r.fcpMs} ms, LCP ${r.lcpMs} ms, TBT ${r.tbtMs} ms, CLS ${r.cls}, ${Math.round(r.totalBytes / 1024)} KB`);
 }
 const record = {tool: `Lighthouse ${(await import('lighthouse/package.json', {with: {type: 'json'}})).default.version}`, browser: browser.browser()?.version?.() ?? 'Chromium',
-  date: new Date().toISOString().slice(0, 10), setting: 'Lighthouse defaults (simulated mobile), local server, run once per page', pages: results};
+  date: new Date().toISOString().slice(0, 10), setting: 'Lighthouse defaults (simulated mobile), local server sending text compressed as GitHub Pages does, run once per page', pages: results};
 if (process.argv.includes('--write')) {
   mkdirSync(resolve(root, 'docs/evidence'), {recursive: true});
   writeFileSync(resolve(root, 'docs/evidence/lighthouse.json'), JSON.stringify(record, null, 2) + '\n');
