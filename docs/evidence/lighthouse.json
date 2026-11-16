@@ -2,77 +2,26 @@
   "tool": "Lighthouse 13.6.0",
   "browser": "153.0.8010.12",
   "date": "2026-11-16",
-  "setting": "Lighthouse defaults (simulated mobile), local server, run once per page",
+  "setting": "Lighthouse defaults (simulated mobile), local server sending text compressed as GitHub Pages does, median of 3 runs per page",
   "pages": [
     {
       "page": "Home",
       "address": "/",
-      "performance": 99,
+      "performance": 96,
       "accessibility": 100,
       "bestPractices": 100,
       "seo": 100,
-      "fcpMs": 909,
-      "lcpMs": 2259,
+      "fcpMs": 754,
+      "lcpMs": 2704,
       "tbtMs": 0,
-      "speedIndexMs": 909,
+      "speedIndexMs": 859,
       "cls": 0,
-      "totalBytes": 904854
-    },
-    {
-      "page": "Cirrus C-01 environmental sensor",
-      "address": "#/p/sensor",
-      "performance": 98,
-      "accessibility": 100,
-      "bestPractices": 100,
-      "seo": 100,
-      "fcpMs": 906,
-      "lcpMs": 2481,
-      "tbtMs": 0,
-      "speedIndexMs": 906,
-      "cls": 0,
-      "totalBytes": 983596
-    },
-    {
-      "page": "Formline articulated desk lamp",
-      "address": "#/p/lamp",
-      "performance": 99,
-      "accessibility": 100,
-      "bestPractices": 100,
-      "seo": 100,
-      "fcpMs": 908,
-      "lcpMs": 2258,
-      "tbtMs": 0,
-      "speedIndexMs": 908,
-      "cls": 0,
-      "totalBytes": 867098
-    },
-    {
-      "page": "Cirrus and Formline campaigns",
-      "address": "#/p/ads",
-      "performance": 95,
-      "accessibility": 100,
-      "bestPractices": 100,
-      "seo": 100,
-      "fcpMs": 902,
-      "lcpMs": 3002,
-      "tbtMs": 0,
-      "speedIndexMs": 902,
-      "cls": 0,
-      "totalBytes": 426773
-    },
-    {
-      "page": "Meridian four-layer carrier board",
-      "address": "#/p/pcb",
-      "performance": 92,
-      "accessibility": 100,
-      "bestPractices": 100,
-      "seo": 100,
-      "fcpMs": 904,
-      "lcpMs": 3326,
-      "tbtMs": 24,
-      "speedIndexMs": 904,
-      "cls": 0,
-      "totalBytes": 416010
+      "totalBytes": 899663,
+      "performanceRuns": [
+        99,
+        94,
+        96
+      ]
     },
     {
       "page": "Flood Exposure Atlas",
@@ -81,26 +30,36 @@
       "accessibility": 100,
       "bestPractices": 100,
       "seo": 100,
-      "fcpMs": 903,
-      "lcpMs": 2103,
-      "tbtMs": 49,
-      "speedIndexMs": 903,
+      "fcpMs": 755,
+      "lcpMs": 1955,
+      "tbtMs": 8,
+      "speedIndexMs": 755,
       "cls": 0,
-      "totalBytes": 252047
+      "totalBytes": 185982,
+      "performanceRuns": [
+        99,
+        99,
+        99
+      ]
     },
     {
       "page": "GeoJSON Quality Kit",
       "address": "#/p/kit",
-      "performance": 96,
+      "performance": 98,
       "accessibility": 100,
       "bestPractices": 100,
       "seo": 100,
-      "fcpMs": 903,
-      "lcpMs": 2703,
-      "tbtMs": 0,
-      "speedIndexMs": 903,
+      "fcpMs": 754,
+      "lcpMs": 2479,
+      "tbtMs": 11,
+      "speedIndexMs": 754,
       "cls": 0,
-      "totalBytes": 221489
+      "totalBytes": 240697,
+      "performanceRuns": [
+        98,
+        98,
+        98
+      ]
     },
     {
       "page": "Relay Desk service request tracker",
@@ -109,12 +68,17 @@
       "accessibility": 100,
       "bestPractices": 100,
       "seo": 100,
-      "fcpMs": 904,
+      "fcpMs": 754,
       "lcpMs": 2404,
-      "tbtMs": 0,
-      "speedIndexMs": 904,
+      "tbtMs": 31,
+      "speedIndexMs": 754,
       "cls": 0,
-      "totalBytes": 262828
+      "totalBytes": 286090,
+      "performanceRuns": [
+        97,
+        98,
+        99
+      ]
     },
     {
       "page": "Second Coat paint estimator",
@@ -123,12 +87,93 @@
       "accessibility": 100,
       "bestPractices": 100,
       "seo": 100,
-      "fcpMs": 903,
-      "lcpMs": 2103,
-      "tbtMs": 25,
-      "speedIndexMs": 907,
-      "cls": 0.002,
-      "totalBytes": 245472
+      "fcpMs": 755,
+      "lcpMs": 1955,
+      "tbtMs": 3,
+      "speedIndexMs": 765,
+      "cls": 0.004,
+      "totalBytes": 238878,
+      "performanceRuns": [
+        99,
+        99,
+        99
+      ]
+    },
+    {
+      "page": "Meridian four-layer carrier board",
+      "address": "#/p/pcb",
+      "performance": 98,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 754,
+      "lcpMs": 2404,
+      "tbtMs": 42,
+      "speedIndexMs": 754,
+      "cls": 0,
+      "totalBytes": 252511,
+      "performanceRuns": [
+        98,
+        98,
+        98
+      ]
+    },
+    {
+      "page": "Cirrus C-01 environmental sensor",
+      "address": "#/p/sensor",
+      "performance": 98,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 755,
+      "lcpMs": 2405,
+      "tbtMs": 0,
+      "speedIndexMs": 755,
+      "cls": 0,
+      "totalBytes": 910754,
+      "performanceRuns": [
+        98,
+        98,
+        98
+      ]
+    },
+    {
+      "page": "Formline articulated desk lamp",
+      "address": "#/p/lamp",
+      "performance": 99,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 754,
+      "lcpMs": 2254,
+      "tbtMs": 0,
+      "speedIndexMs": 754,
+      "cls": 0,
+      "totalBytes": 877387,
+      "performanceRuns": [
+        99,
+        99,
+        99
+      ]
+    },
+    {
+      "page": "Cirrus and Formline campaigns",
+      "address": "#/p/ads",
+      "performance": 96,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcpMs": 757,
+      "lcpMs": 2707,
+      "tbtMs": 0,
+      "speedIndexMs": 757,
+      "cls": 0,
+      "totalBytes": 391348,
+      "performanceRuns": [
+        96,
+        97,
+        96
+      ]
     }
   ]
 }
