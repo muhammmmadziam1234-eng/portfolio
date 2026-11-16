@@ -165,13 +165,16 @@ function renderHome(current) {
 
 /* ---------- about ---------- */
 function renderAbout() {
+  // The bio is one paragraph or a list of them; without one, the page says who you are from your role and tagline.
+  const bio = [].concat(config.bio || []).filter(Boolean);
+  if (!bio.length) bio.push([config.role && `${siteName}, ${config.role.charAt(0).toLowerCase()}${config.role.slice(1)}.`, config.tagline].filter(Boolean).join(' '));
   const skills = groups.map(g => ({label: g.label, tags: [...new Set(projects.filter(p => p.group === g.id).flatMap(p => p.tags))]}));
   const facts = [['Based in', config.location], ['Availability', config.availability]].filter(([, v]) => v);
   main.replaceChildren(
     h('section', {class: 'page-head'}, h('div', {class: 'container about-grid'},
       h('div', {},
         h('h1', {tabindex: '-1'}, 'About'),
-        h('p', {class: 'lead'}, config.bio || [config.role && `${siteName}, ${config.role.charAt(0).toLowerCase()}${config.role.slice(1)}.`, config.tagline].filter(Boolean).join(' ')),
+        bio.map((text, i) => h('p', {class: i ? 'bio' : 'lead'}, text)),
         facts.length ? h('dl', {class: 'about-facts'}, facts.map(([k, v]) => h('div', {}, h('dt', {}, k), h('dd', {}, v)))) : null),
       config.photo ? h('img', {class: 'about-photo', src: config.photo, alt: `Photo of ${siteName}`, width: 360, height: 360}) : null)),
     h('section', {class: 'section', 'aria-labelledby': 'skills-title'}, h('div', {class: 'container'},

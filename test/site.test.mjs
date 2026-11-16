@@ -101,7 +101,7 @@ test('the about page shows only what the config fills in, and lists skills by di
   try {
     assert.equal(await page.locator('.about-facts').count(), config.location || config.availability ? 1 : 0);
     assert.equal(await page.locator('.about-photo').count(), config.photo ? 1 : 0);
-    if (config.bio) assert.match(await page.locator('.lead').innerText(), new RegExp(config.bio.slice(0, 20).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    for (const [i, text] of [].concat(config.bio || []).filter(Boolean).entries()) assert.equal(await page.locator('.page-head .lead, .page-head .bio').nth(i).innerText(), text);
     assert.equal(await page.locator('.skills h3').count(), 3);
     assert.match(await page.title(), /About/);
   } finally { await context.close(); }

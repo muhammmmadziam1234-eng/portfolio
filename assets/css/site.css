@@ -271,6 +271,7 @@ textarea{line-height:1.45}
 .page-head{padding-block:var(--s8) var(--s4)}
 .page-head h1{font-size:var(--fs-h1);font-stretch:112%;letter-spacing:-.025em;outline:none}
 .page-head .lead{margin-top:var(--s2);font-size:1.15rem;color:var(--muted);max-width:60ch}
+.page-head .bio{margin-top:var(--s2);max-width:65ch}
 .about-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--s6);align-items:start}
 .about-photo{width:100%;max-width:360px;aspect-ratio:1;object-fit:cover;border-radius:var(--radius);box-shadow:var(--shadow)}
 .about-facts{display:grid;gap:var(--s2);margin-top:var(--s3)}
