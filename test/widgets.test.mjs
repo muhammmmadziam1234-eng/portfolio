@@ -2,6 +2,7 @@ import {test, before, after} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {launch, open, wanted} from './helpers.mjs';
+import {explodeFrames} from '../assets/js/media.js';
 
 let env;
 before(async () => { env = await launch(); });
@@ -21,11 +22,11 @@ test('home: the slider pulls the sensor apart and says what it shows', async () 
     await range.focus();
     await page.keyboard.press('End');
     assert.equal(await range.getAttribute('aria-valuetext'), 'Fully exploded');
-    assert.match(await page.locator('.scrub-frame img').getAttribute('src'), /explode-13\.jpg$/);
+    assert.equal(await page.locator('.scrub-frame img').getAttribute('src'), explodeFrames.at(-1).src);
     assert.match(await page.locator('.scrub-frame img').getAttribute('alt'), /fully exploded/);
     await page.keyboard.press('Home');
     assert.equal(await range.getAttribute('aria-valuetext'), 'Assembled');
-    assert.match(await page.locator('.scrub-frame img').getAttribute('src'), /explode-00\.jpg$/);
+    assert.equal(await page.locator('.scrub-frame img').getAttribute('src'), explodeFrames[0].src);
   });
 });
 

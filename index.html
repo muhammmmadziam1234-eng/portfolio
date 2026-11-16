@@ -30,7 +30,7 @@
   // Only the home address shows the first sensor picture straight away, so only it asks for it early.
   if (!location.hash || /^#\/?(all|contact)?$/.test(location.hash)) {
     const link = document.createElement('link');
-    link.rel = 'preload'; link.as = 'image'; link.href = 'assets/media/cirrus-explode/explode-00.jpg'; link.fetchPriority = 'high';
+    link.rel = 'preload'; link.as = 'image'; link.href = 'assets/media/cirrus-explode/explode-00.webp'; link.fetchPriority = 'high';
     document.head.append(link);
   }
 </script>

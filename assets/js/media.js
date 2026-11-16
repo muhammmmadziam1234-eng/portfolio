@@ -1,9 +1,11 @@
 // Frame sets for the two scrubbers. The images were rendered from the projects' own Blender files.
 const pad = i => String(i).padStart(2, '0');
 
-export const explodeFrames = Array.from({length: 14}, (_, i) => ({
-  src: `assets/media/cirrus-explode/explode-${pad(i)}.jpg`, at: i / 13,
-  alt: i === 0 ? 'The Cirrus sensor assembled' : i === 13 ? 'The Cirrus sensor fully exploded: cover, gasket, boards, housing and wall cleat in a row' : `The Cirrus sensor ${Math.round(i / 13 * 100)} percent exploded`
+// 40 frames, with the camera moving from the hero view to the exploded view (scripts/render/render_explode.py).
+const explodeCount = 40, explodeLast = explodeCount - 1;
+export const explodeFrames = Array.from({length: explodeCount}, (_, i) => ({
+  src: `assets/media/cirrus-explode/explode-${pad(i)}.webp`, at: i / explodeLast,
+  alt: i === 0 ? 'The Cirrus sensor assembled' : i === explodeLast ? 'The Cirrus sensor fully exploded: cover, gasket, boards, housing and wall cleat in a row' : `The Cirrus sensor ${Math.round(i / explodeLast * 100)} percent exploded`
 }));
 
 export const explodeText = p => p < 0.02 ? 'Assembled' : p > 0.98 ? 'Fully exploded' : `${Math.round(p * 100)} percent exploded`;
