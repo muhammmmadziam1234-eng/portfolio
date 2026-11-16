@@ -2,7 +2,8 @@
 // A small static server for local viewing and for the tests. No dependencies.
 // usage: node scripts/serve.mjs [port]      (port 0 picks a free one; the chosen port is printed)
 import {createServer} from 'node:http';
-import {createReadStream, statSync, existsSync} from 'node:fs';
+import {createReadStream, readFileSync, statSync, existsSync} from 'node:fs';
+import {gzipSync} from 'node:zlib';
 import {dirname, extname, join, normalize, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
@@ -11,6 +12,8 @@ const types = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
   '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.woff2': 'font/woff2',
   '.mp4': 'video/mp4', '.webm': 'video/webm', '.txt': 'text/plain; charset=utf-8', '.md': 'text/plain; charset=utf-8', '.webmanifest': 'application/manifest+json'};
 
+const compressible = new Set(['.html', '.js', '.mjs', '.css', '.json', '.svg', '.txt', '.md', '.webmanifest']);
+
 export function serve(port = 0) {
   const server = createServer((req, res) => {
     try {
@@ -18,10 +21,17 @@ export function serve(port = 0) {
       if (path.endsWith('/')) path += 'index.html';
       const file = normalize(join(root, path));
       if (file !== root && !file.startsWith(root + sep)) { res.writeHead(403).end('Forbidden'); return; }
+      // A folder asked for without its slash (p/atlas) is sent to p/atlas/, as GitHub Pages does.
+      if (existsSync(file) && statSync(file).isDirectory()) { res.writeHead(301, {location: `${path}/`}).end(); return; }
       if (!existsSync(file) || !statSync(file).isFile()) { res.writeHead(404, {'content-type': 'text/plain'}).end('Not found'); return; }
       const size = statSync(file).size, type = types[extname(file)] ?? 'application/octet-stream';
       const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '');
-      if (range) {
+      // Text is sent compressed when the browser accepts it, as GitHub Pages does, so local measurements match the published site.
+      if (!range && compressible.has(extname(file)) && /\bgzip\b/.test(req.headers['accept-encoding'] ?? '')) {
+        const body = gzipSync(readFileSync(file));
+        res.writeHead(200, {'content-type': type, 'content-encoding': 'gzip', 'content-length': body.length, vary: 'accept-encoding', 'cache-control': 'no-cache'});
+        res.end(body);
+      } else if (range) {
         const start = range[1] ? Number(range[1]) : 0, end = range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
         res.writeHead(206, {'content-type': type, 'content-range': `bytes ${start}-${end}/${size}`, 'accept-ranges': 'bytes', 'content-length': end - start + 1});
         createReadStream(file, {start, end}).pipe(res);

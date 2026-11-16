@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Runs Lighthouse against this site on a local server and records the scores, so the numbers can be checked.
-// usage: node scripts/lighthouse.mjs [--write]      (--write saves docs/evidence/lighthouse.json)
+// usage: node scripts/lighthouse.mjs [--write]      (--write saves docs/evidence/lighthouse.json; LH_RUNS sets the runs per page, default 3)
 // Uses Lighthouse's default settings: a simulated mid-range phone on a slow connection.
 import {writeFileSync, mkdirSync} from 'node:fs';
 import {dirname, resolve} from 'node:path';
@@ -18,17 +18,24 @@ const base = `http://127.0.0.1:${server.address().port}/`;
 const browser = await chromium.launchPersistentContext('', {
   executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox', `--remote-debugging-port=${port}`], headless: true});
 const results = [];
+// One run can swing by several points (on the home page the sensor's other pictures start loading as the first one paints),
+// so each page runs three times and the record keeps the run with the median performance score, plus every run's score.
+const runs = Number(process.env.LH_RUNS || 3);
 for (const [name, route] of pages) {
-  const run = await lighthouse(base + route, {port, output: 'json', logLevel: 'error', onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo']});
-  const score = id => Math.round(run.lhr.categories[id].score * 100);
-  results.push({page: name, address: route || '/', performance: score('performance'), accessibility: score('accessibility'), bestPractices: score('best-practices'), seo: score('seo'),
-    fcpMs: Math.round(run.lhr.audits['first-contentful-paint'].numericValue), lcpMs: Math.round(run.lhr.audits['largest-contentful-paint'].numericValue),
-    tbtMs: Math.round(run.lhr.audits['total-blocking-time'].numericValue), speedIndexMs: Math.round(run.lhr.audits['speed-index'].numericValue), cls: Number(run.lhr.audits['cumulative-layout-shift'].numericValue.toFixed(3)), totalBytes: run.lhr.audits['total-byte-weight'].numericValue});
-  const r = results[results.length - 1];
-  console.log(`${name}: performance ${r.performance}, accessibility ${r.accessibility}, best practices ${r.bestPractices}, SEO ${r.seo} | FCP ${r.fcpMs} ms, LCP ${r.lcpMs} ms, TBT ${r.tbtMs} ms, CLS ${r.cls}, ${Math.round(r.totalBytes / 1024)} KB`);
+  const tries = [];
+  for (let i = 0; i < runs; i++) {
+    const run = await lighthouse(base + route, {port, output: 'json', logLevel: 'error', onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo']});
+    const score = id => Math.round(run.lhr.categories[id].score * 100);
+    tries.push({page: name, address: route || '/', performance: score('performance'), accessibility: score('accessibility'), bestPractices: score('best-practices'), seo: score('seo'),
+      fcpMs: Math.round(run.lhr.audits['first-contentful-paint'].numericValue), lcpMs: Math.round(run.lhr.audits['largest-contentful-paint'].numericValue),
+      tbtMs: Math.round(run.lhr.audits['total-blocking-time'].numericValue), speedIndexMs: Math.round(run.lhr.audits['speed-index'].numericValue), cls: Number(run.lhr.audits['cumulative-layout-shift'].numericValue.toFixed(3)), totalBytes: run.lhr.audits['total-byte-weight'].numericValue});
+  }
+  const r = {...[...tries].sort((a, b) => a.performance - b.performance || a.lcpMs - b.lcpMs)[Math.floor(tries.length / 2)], performanceRuns: tries.map(t => t.performance)};
+  results.push(r);
+  console.log(`${name}: performance ${r.performance} (runs ${r.performanceRuns.join(', ')}), accessibility ${r.accessibility}, best practices ${r.bestPractices}, SEO ${r.seo} | FCP ${r.fcpMs} ms, LCP ${r.lcpMs} ms, TBT ${r.tbtMs} ms, CLS ${r.cls}, ${Math.round(r.totalBytes / 1024)} KB`);
 }
 const record = {tool: `Lighthouse ${(await import('lighthouse/package.json', {with: {type: 'json'}})).default.version}`, browser: browser.browser()?.version?.() ?? 'Chromium',
-  date: new Date().toISOString().slice(0, 10), setting: 'Lighthouse defaults (simulated mobile), local server, run once per page', pages: results};
+  date: new Date().toISOString().slice(0, 10), setting: `Lighthouse defaults (simulated mobile), local server sending text compressed as GitHub Pages does, median of ${runs} runs per page`, pages: results};
 if (process.argv.includes('--write')) {
   mkdirSync(resolve(root, 'docs/evidence'), {recursive: true});
   writeFileSync(resolve(root, 'docs/evidence/lighthouse.json'), JSON.stringify(record, null, 2) + '\n');

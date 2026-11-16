@@ -3,15 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Muhamad Ziam: a PCB, 3D product design, data tools and web apps you can try</title>
-<meta name="description" content="Eight projects you can try in the browser: a four-layer PCB, two 3D product studies, ad campaigns, a GeoJSON cleaner, a flood map, a service desk and a paint estimator. Every figure links to the file it came from.">
-<meta name="color-scheme" content="light">
+<title>Muhamad Ziam: freelance engineer for web maps and data tools</title>
+<meta name="description" content="Muhamad Ziam builds web maps, data tools and tested applications. Eight projects you can try in the browser, from a flood exposure map to a four-layer circuit board, each with the evidence behind it.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#fbfbf9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1417" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Muhamad Ziam: a PCB, 3D product design, data tools and web apps you can try">
-<meta property="og:description" content="Eight projects you can open and use, each with the tests and measurements behind it.">
+<meta property="og:title" content="Muhamad Ziam: freelance engineer for web maps and data tools">
+<meta property="og:description" content="Eight projects you can open and use, from a flood exposure map to a four-layer circuit board, each with the evidence behind it.">
 <meta property="og:image" content="https://muhammmmadziam1234-eng.github.io/portfolio/assets/img/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 <link rel="modulepreload" href="assets/js/main.js">
@@ -20,9 +24,11 @@
 <link rel="modulepreload" href="assets/js/media.js">
 <link rel="modulepreload" href="assets/js/widgets/scrubber.js">
 <link rel="modulepreload" href="site.config.js">
+<link rel="preload" href="data/facts.json" as="fetch" crossorigin>
+<link rel="preload" href="data/sources.json" as="fetch" crossorigin>
 <script>
   // Only the home address shows the first sensor picture straight away, so only it asks for it early.
-  if (!location.hash || /^#\/?(all)?$/.test(location.hash)) {
+  if (!location.hash || /^#\/?(all|contact)?$/.test(location.hash)) {
     const link = document.createElement('link');
     link.rel = 'preload'; link.as = 'image'; link.href = 'assets/media/cirrus-explode/explode-00.jpg'; link.fetchPriority = 'high';
     document.head.append(link);
@@ -31,26 +37,55 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to the content</a>
-<header class="bar">
-  <a class="mark" href="#/" id="site-name">Portfolio</a>
-  <nav aria-label="Main">
-    <a href="#/p/sensor" id="start-tour">Take the tour</a>
-    <a href="#/all">All projects</a>
-    <a href="#/method">How it is checked</a>
-    <a class="btn small" id="upwork" href="#/" hidden>Hire me on Upwork</a>
-  </nav>
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="#/" id="site-name">Portfolio</a>
+    <nav aria-label="Main">
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav"><span class="menu-icon" aria-hidden="true"></span><span class="menu-label">Menu</span></button>
+      <div class="site-nav" id="site-nav">
+        <a href="#/all">Work</a>
+        <a href="#/about">About</a>
+        <a href="#/method">Verification</a>
+        <a href="#/contact">Contact</a>
+      </div>
+    </nav>
+    <a class="btn small" id="upwork" href="#/contact" aria-label="Hire me on Upwork" hidden><span>Hire me<span class="hide-sm"> on Upwork</span></span></a>
+  </div>
 </header>
 <main id="main" tabindex="-1">
   <noscript>
-    <section class="page">
+    <section class="container page-head">
       <h1>This page needs JavaScript</h1>
-      <p>The projects run in your browser, so they need scripts switched on. The source for each one is on GitHub: <a href="https://github.com/muhammmmadziam1234-eng">github.com/muhammmmadziam1234-eng</a>.</p>
+      <p class="lead">The projects run in your browser, so they need scripts switched on. The source for each one is on GitHub: <a href="https://github.com/muhammmmadziam1234-eng">github.com/muhammmmadziam1234-eng</a>.</p>
     </section>
   </noscript>
 </main>
-<footer class="foot">
-  <p id="foot-line">© 2026 muhammmmadziam1234-eng. All rights reserved. Archivo (this page) and Gelasio (the flood map and the paint estimator) are open typefaces and keep their own licences.</p>
-  <p id="foot-sources"></p>
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-name" id="foot-name">Portfolio</p>
+        <p id="foot-line"></p>
+      </div>
+      <nav aria-label="Footer">
+        <h2>Site</h2>
+        <ul>
+          <li><a href="#/all">Work</a></li>
+          <li><a href="#/about">About</a></li>
+          <li><a href="#/method">Verification</a></li>
+          <li><a href="#/contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div>
+        <h2>Elsewhere</h2>
+        <ul id="foot-links"></ul>
+      </div>
+    </div>
+    <div class="footer-base">
+      <p id="foot-copy"></p>
+      <p>Archivo and Gelasio are open typefaces under the SIL Open Font Licence: <a href="assets/fonts/OFL-Archivo.txt">Archivo licence</a>, <a href="demos/atlas/fonts/OFL-Gelasio.txt">Gelasio licence</a>.</p>
+    </div>
+  </div>
 </footer>
 <p id="live" class="sr" role="status" aria-live="polite"></p>
 <script type="module" src="assets/js/main.js"></script>

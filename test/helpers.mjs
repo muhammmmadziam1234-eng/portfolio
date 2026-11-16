@@ -11,8 +11,8 @@ export async function launch() {
 }
 
 /** Open a route in a fresh context and record everything that could go wrong while it loads. */
-export async function open(browser, base, route, {width = 1280, height = 800, reducedMotion = 'no-preference'} = {}) {
-  const context = await browser.newContext({viewport: {width, height}, reducedMotion});
+export async function open(browser, base, route, {width = 1280, height = 800, reducedMotion = 'no-preference', colorScheme = 'light'} = {}) {
+  const context = await browser.newContext({viewport: {width, height}, reducedMotion, colorScheme});
   const page = await context.newPage();
   const log = {errors: [], outside: [], bad: []};
   page.on('pageerror', e => log.errors.push(e.message));

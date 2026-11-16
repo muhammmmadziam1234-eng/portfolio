@@ -168,15 +168,26 @@ test('pcb: the bill of materials opens, and a part button selects that part', as
   });
 });
 
-test('the overview table shows figures that come from data/facts.json', async () => {
+test('the figures on the home page and the project pages come from data/facts.json, each with its source file', async () => {
   const facts = json('data/facts.json');
+  const {default: config} = await import('../site.config.js');
+  const {projects} = await import('../assets/js/projects.js');
   await withPage('#/all', {}, async page => {
-    for (const slug of ['sensor', 'lamp', 'ads', 'pcb'].filter(wanted)) {
-      const lines = facts[slug].filter(f => f.line).slice(0, 2).map(f => f.line);
-      const text = await page.locator('.register tbody').innerText();
-      for (const line of lines) assert.ok(text.includes(line), `${slug}: ${line}`);
-    }
+    const shown = await page.locator('.feature-stat .value').allInnerTexts();
+    assert.deepEqual(shown, config.featured.filter(slug => facts[slug]?.length).map(slug => facts[slug][0].value));
   });
+  for (const slug of ['sensor', 'lamp', 'ads', 'pcb'].filter(wanted)) {
+    const repo = projects.find(p => p.slug === slug).repo;
+    await withPage(`#/p/${slug}`, {}, async page => {
+      const stats = page.locator('.stats .stat');
+      assert.equal(await stats.count(), facts[slug].length, `${slug}: one stat per figure`);
+      for (const [i, fact] of facts[slug].entries()) {
+        assert.equal(await stats.nth(i).locator('dt').innerText(), fact.label);
+        assert.equal(await stats.nth(i).locator('.value').innerText(), fact.value);
+        if (fact.path) assert.ok((await stats.nth(i).locator('.source a').getAttribute('href')).endsWith(`/${repo}/blob/main/${fact.path}`), `${slug}: source of ${fact.label}`);
+      }
+    });
+  }
 });
 
 test('atlas: the real app runs in the page, and the scenario switch shows what changes', async () => {
