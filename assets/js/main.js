@@ -100,7 +100,7 @@ function renderHome(current) {
     caption: 'Cirrus C-01, rendered from the project\'s Blender file. Drag the picture or the slider.'
   });
   cleanup = () => scrub.destroy();
-  document.title = 'Portfolio: a PCB, 3D product design, data tools and web apps you can try';
+  document.title = `${config.name || 'Portfolio'}: a PCB, 3D product design, data tools and web apps you can try`;
   if (current.scrollTo) requestAnimationFrame(() => $('#' + current.scrollTo)?.scrollIntoView());
 }
 
@@ -109,7 +109,7 @@ function renderMissing() {
     h('h1', {tabindex: '-1'}, 'That page does not exist'),
     h('p', {class: 'intro'}, 'The link may be old or mistyped. The projects are all one click away.'),
     h('p', {class: 'actions'}, h('a', {class: 'btn', href: '#/all'}, 'See all projects'), h('a', {class: 'btn secondary', href: '#/p/' + projects[0].slug}, 'Take the tour'))));
-  document.title = 'Page not found: portfolio';
+  document.title = `Page not found: ${config.name || 'portfolio'}`;
 }
 
 async function renderProject(slug) {
@@ -136,7 +136,7 @@ async function renderProject(slug) {
     h('nav', {class: 'hop', 'aria-label': 'Move through the tour'},
       prev ? h('a', {href: `#/p/${prev.slug}`, rel: 'prev'}, h('small', {}, 'Previous project'), prev.title) : h('span', {}),
       next ? h('a', {href: `#/p/${next.slug}`, rel: 'next'}, h('small', {}, 'Next project'), next.title) : h('a', {href: '#/all'}, h('small', {}, 'End of the tour'), 'Back to all projects')));
-  document.title = `${p.title}: portfolio`;
+  document.title = `${p.title}: ${config.name || 'portfolio'}`;
   // The demo is built before the page is shown, so nothing below it moves when it arrives.
   main.setAttribute('aria-busy', 'true');
   try {
@@ -161,7 +161,7 @@ async function render() {
   else if (current.name === 'missing') renderMissing();
   else if (current.name === 'method') {
     main.replaceChildren(methodSection(true));
-    document.title = 'How the numbers are checked: portfolio';
+    document.title = `How the numbers are checked: ${config.name || 'portfolio'}`;
   } else renderHome(current);
   if (!current.scrollTo && !firstRender) {
     window.scrollTo(0, 0);

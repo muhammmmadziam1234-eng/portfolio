@@ -234,7 +234,7 @@ main{min-height:100vh;outline:none}
 .register .who strong a{text-decoration-thickness:1px}
 @media (max-width:720px){.bar nav{width:100%;justify-content:space-between;gap:0}}
 .pcb-side input[type=checkbox]{width:24px;height:24px;flex:none}
-.by{margin:0 0 10px;color:var(--muted);font-size:1.05rem}
+.by{margin:14px 0 10px;color:var(--muted);font-size:1.05rem}
 @media (pointer:coarse){
   .chip,.tabs button,.btn,.pcb-side label,.bom button,.bom-wrap summary,.steps .chip{min-height:44px}
   .bom button{min-width:44px;display:inline-flex;align-items:center;justify-content:center}
