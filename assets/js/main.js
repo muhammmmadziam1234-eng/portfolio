@@ -261,18 +261,23 @@ async function renderProject(slug) {
 /* ---------- router ---------- */
 let rendering = Promise.resolve();
 let firstRender = true;
+let shown = null;
 async function render() {
   const current = route();
-  cleanup(); cleanup = () => {};
   setMenu(false);
   markNav(current);
-  if (current.name === 'project') await renderProject(current.slug);
-  else if (current.name === 'missing') renderMissing();
-  else if (current.name === 'method') renderMethod();
-  else if (current.name === 'about') renderAbout();
-  else renderHome(current);
-  if (!firstRender && !reducedMotion()) {
-    main.classList.remove('entering'); void main.offsetWidth; main.classList.add('entering');
+  // Moving within the home page (#/, #/all, #/contact) only scrolls: the page, its pictures and the slider stay as they are.
+  if (!(current.name === 'home' && shown === 'home')) {
+    cleanup(); cleanup = () => {};
+    if (current.name === 'project') await renderProject(current.slug);
+    else if (current.name === 'missing') renderMissing();
+    else if (current.name === 'method') renderMethod();
+    else if (current.name === 'about') renderAbout();
+    else renderHome(current);
+    shown = current.name;
+    if (!firstRender && !reducedMotion()) {
+      main.classList.remove('entering'); void main.offsetWidth; main.classList.add('entering');
+    }
   }
   if (current.scrollTo) {
     const target = document.getElementById(current.scrollTo);
@@ -290,4 +295,10 @@ $('.skip').addEventListener('click', event => { event.preventDefault(); main.foc
 main.addEventListener('animationend', () => main.classList.remove('entering'));
 await loadData();
 window.addEventListener('hashchange', () => { rendering = rendering.then(render); });
+// A link to the address already showing changes nothing in the address bar, so it would do nothing; scroll to its place instead.
+document.addEventListener('click', event => {
+  const link = event.target.closest('a[href^="#/"]');
+  if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  if (link.getAttribute('href') === (location.hash || '#/')) { event.preventDefault(); rendering = rendering.then(render); }
+});
 await render();

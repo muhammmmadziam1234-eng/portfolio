@@ -120,3 +120,33 @@ test('every page stays within 1200 pixels of content and never scrolls sideways,
     }
   }
 });
+
+test('a link to the place already showing still works, and moving within the home page does not rebuild it', async () => {
+  const {page, context} = await open(env.browser, env.base, '#/contact', {reducedMotion: 'reduce'});
+  const inView = selector => page.waitForFunction(s => { const r = document.querySelector(s).getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight; }, selector);
+  try {
+    await inView('#contact');
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.locator('#site-nav').getByRole('link', {name: 'Contact'}).click();
+    await inView('#contact');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'contact');
+    await page.evaluate(() => { scrollTo(0, 0); window.heroPicture = document.querySelector('.scrub-frame img'); });
+    await page.getByRole('link', {name: 'View work'}).click();
+    await page.waitForFunction(() => location.hash === '#/all');
+    await inView('#work');
+    assert.ok(await page.evaluate(() => window.heroPicture.isConnected && window.heroPicture === document.querySelector('.scrub-frame img')), 'the home page was rebuilt');
+  } finally { await context.close(); }
+});
+
+test('the card and pager pictures load once the page has painted', async () => {
+  for (const route of ['', '#/p/pcb']) {
+    const {page, context} = await open(env.browser, env.base, route, {reducedMotion: 'reduce'});
+    try {
+      await page.evaluate(async () => { for (let y = 0; y <= document.documentElement.scrollHeight; y += 500) { scrollTo(0, y); await new Promise(done => setTimeout(done, 40)); } });
+      await page.waitForFunction(() => {
+        const pictures = [...document.querySelectorAll('.feature-media img, .card-media img, .pager-card img')];
+        return pictures.length > 0 && pictures.every(img => !img.hasAttribute('data-src') && img.complete && img.naturalWidth > 0);
+      }, null, {timeout: 10000});
+    } finally { await context.close(); }
+  }
+});

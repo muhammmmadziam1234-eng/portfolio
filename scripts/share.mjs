@@ -44,7 +44,6 @@ function page(p) {
 <link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="../../assets/img/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="../../assets/img/apple-touch-icon.png">
-<meta http-equiv="refresh" content="0; url=${esc(target)}">
 <script>location.replace(${JSON.stringify(target).replace(/</g, '\\u003c')});</script>
 </head>
 <body>
