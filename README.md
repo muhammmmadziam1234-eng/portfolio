@@ -98,10 +98,4 @@ node scripts/upwork/record.mjs    # a short captioned clip per project, and a co
 node scripts/record-tracker.mjs --repo ../service-request-tracker --node <path to Node 24>   # the service desk recording on the site
 ```
 
-## Limits
-
-- The 3D pictures are renders of concept studies. Nothing here claims a physical prototype exists.
-- The Lighthouse scores are one run each on a local server with Lighthouse's default simulated phone. A run on the public site will differ a little.
-- The demos use fictional data.
-
 © 2026 muhammmmadziam1234-eng. All rights reserved, except the typeface in [assets/fonts](assets/fonts), which keeps its own licence.

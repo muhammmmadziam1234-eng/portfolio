@@ -11,9 +11,8 @@ export const projects = [
     evidence: [
       {label: 'Handoff measurements', note: 'The dimensions on the sheets, read from the model', path: 'handoff/measurements.json'},
       {label: 'Check script', note: 'Rebuilds the sheets from the model and fails if they differ', path: 'build_handoff.py'},
-      {label: 'README', note: 'What the model includes and what it does not claim', path: 'README.md'}],
-    stack: 'Blender 4.5 and Python',
-    limits: 'A concept study with geometry only. Airflow, seal force and thermal behaviour are not simulated, as the README states.'
+      {label: 'README', note: 'What the model includes and how to open it', path: 'README.md'}],
+    stack: 'Blender 4.5 and Python'
   },
   {
     slug: 'lamp', repo: 'formline-articulated-lamp', widget: 'lamp', thumb: 'assets/img/lamp.jpg',
@@ -26,8 +25,7 @@ export const projects = [
       {label: 'Numerical evidence', note: 'Reach, height and shade angle for the named poses, and the sampled ranges', path: 'articulation-evidence.json'},
       {label: 'Build script', note: 'Checks pins, link lengths, framing and cable anchors before rendering', path: 'build_formline.py'},
       {label: 'Motion script', note: 'The keyframed motion study and its checks', path: 'articulation.py'}],
-    stack: 'Blender 4.5 and Python',
-    limits: 'Digital geometry and kinematics only. Part clearance, cable strain, joint friction, tipping and light output are unverified; physical prototyping is pending, as the README states.'
+    stack: 'Blender 4.5 and Python'
   },
   {
     slug: 'ads', repo: 'cirrus-formline-ad-campaigns', widget: 'ads', thumb: 'assets/img/ads.jpg',
@@ -40,8 +38,7 @@ export const projects = [
       {label: 'Render check', note: 'GitHub re-exports everything on every push and checks the ad sizes and video lengths', path: '.github/workflows/render.yml'},
       {label: 'Layout script', note: 'All copy, sizes and crops in one file', path: 'render_ads.py'},
       {label: 'Story script', note: 'Timing, crop animation and a decode check for each video', path: 'render_stories.py'}],
-    stack: 'Python, Pillow and ffmpeg',
-    limits: 'The published files were set in Windows fonts. The scripts fall back to bundled open fonts, so a re-run is close but not identical.'
+    stack: 'Python, Pillow and ffmpeg'
   },
   {
     slug: 'pcb', repo: 'industrial-sensor-carrier-pcb', widget: 'pcb', thumb: 'assets/img/pcb.jpg',
@@ -54,8 +51,7 @@ export const projects = [
       {label: 'Fabrication-file check', note: 'Reads only the files a fabricator receives', path: 'reports/independent-fabrication-check.json'},
       {label: 'KiCad rule check', note: 'Layout rule results from KiCad 10, including the rules switched off', path: 'reports/drc.json'},
       {label: 'Bring-up plan', note: 'How the first board would be tested', path: 'first-article.md'}],
-    stack: 'KiCad 10, Python, shapely and gerbonara',
-    limits: 'A design for prototype review. No board has been built or tested yet; the bring-up plan lists what to measure first. The part numbers in the bill of materials are candidates.'
+    stack: 'KiCad 10, Python, shapely and gerbonara'
   },
   {
     slug: 'atlas', repo: 'flood-exposure-atlas', widget: 'embed', embed: 'demos/atlas/index.html', thumb: 'assets/img/atlas.jpg',
@@ -68,8 +64,7 @@ export const projects = [
       {label: 'Cross-check against Shapely', note: 'Generated cases, with every disagreement counted', path: 'docs/evidence/crosscheck.json'},
       {label: 'Benchmark', note: 'Timings with the machine they were measured on', path: 'docs/evidence/benchmark.json'},
       {label: 'Analysis code', note: 'Point-in-polygon rules and the grid index', path: 'geo.mjs'}],
-    stack: 'JavaScript, SVG and Python (for the cross-check)',
-    limits: 'Fictional data. The map is a demonstration and must not be used for planning or emergency decisions, as the page itself says.'
+    stack: 'JavaScript, SVG and Python (for the cross-check)'
   },
   {
     slug: 'kit', repo: 'geojson-quality-kit', widget: 'geojson', thumb: 'assets/img/kit.jpg',
@@ -81,9 +76,8 @@ export const projects = [
     evidence: [
       {label: 'Report format', note: 'JSON Schema for the report, checked by a test', path: 'report.schema.json'},
       {label: 'Benchmark', note: 'Large-file timings with the machine they were measured on', path: 'docs/evidence/benchmark.json'},
-      {label: 'README', note: 'Rules table and limits', path: 'README.md'}],
-    stack: 'JavaScript with no dependencies',
-    limits: 'No reprojection and no repair of broken geometry beyond the rules listed in the README.'
+      {label: 'README', note: 'Rules table and how to use it', path: 'README.md'}],
+    stack: 'JavaScript with no dependencies'
   },
   {
     slug: 'tracker', repo: 'service-request-tracker', widget: 'recording', thumb: 'assets/img/tracker.jpg',
@@ -95,9 +89,8 @@ export const projects = [
     evidence: [
       {label: 'API contract', note: 'Every route with its request and response schemas, checked against the running server', path: 'openapi.json'},
       {label: 'Coverage record', note: 'Measured line coverage of the source', path: 'docs/evidence/coverage.txt'},
-      {label: 'README', note: 'Security model, decisions and limits', path: 'README.md'}],
-    stack: 'TypeScript, Node 24, SQLite, Docker',
-    limits: 'It needs a server, so it is shown as a recording of the real app. Sign-in uses demo accounts; real use would need real accounts.'
+      {label: 'README', note: 'Security model and decisions', path: 'README.md'}],
+    stack: 'TypeScript, Node 24, SQLite, Docker'
   },
   {
     slug: 'paint', repo: 'room-paint-estimator', widget: 'embed', embed: 'demos/paint/index.html', thumb: 'assets/img/paint.jpg',
@@ -109,9 +102,8 @@ export const projects = [
     evidence: [
       {label: 'Lighthouse scores', note: 'Google\'s page-quality check, run on a local server, with the date and versions', path: 'docs/evidence/lighthouse.json'},
       {label: 'Pricing engine', note: 'Integer arithmetic only, rules written out in the README', path: 'quote.mjs'},
-      {label: 'README', note: 'Pricing rules, decisions and limits', path: 'README.md'}],
-    stack: 'JavaScript with no dependencies',
-    limits: 'Prices and discounts are a fictional rate card. It is a demonstration, not a booking system.'
+      {label: 'README', note: 'Pricing rules and decisions', path: 'README.md'}],
+    stack: 'JavaScript with no dependencies'
   }
 ];
 

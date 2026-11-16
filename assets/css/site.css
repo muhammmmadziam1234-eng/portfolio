@@ -90,7 +90,6 @@ main{min-height:100vh;outline:none}
 .facts div{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
 .facts dt{font-size:.92rem;color:var(--muted)}
 .facts dd{font-size:1.15rem;font-weight:620;font-stretch:104%;font-variant-numeric:tabular-nums}
-.limits{border-left:3px solid var(--accent);padding-left:12px;color:var(--muted)}
 .hop{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:0 var(--gutter) 48px}
 .hop a{max-width:46%}
 .hop small{display:block;color:var(--muted)}
