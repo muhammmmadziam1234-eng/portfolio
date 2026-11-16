@@ -17,9 +17,11 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     h('div', {class: 'scrub-ends', 'aria-hidden': 'true'}, h('span', {}, endLabels[0]), h('span', {}, endLabels[1])),
     caption ? h('p', {class: 'caption'}, caption) : null);
   // The first picture loads with the page. The rest load once the page is idle, or at the first touch, whichever comes first.
+  // The intro waits for the same moment, so its pictures never compete with the first one while the page is loading.
   let loading = null;
   const loadAll = () => loading ??= Promise.all(frames.map(f => new Promise(done => { const pre = new Image(); pre.onload = pre.onerror = done; pre.src = f.src; })));
-  if (document.readyState === 'complete') setTimeout(loadAll, 300); else addEventListener('load', () => setTimeout(loadAll, 300), {once: true});
+  const pageReady = new Promise(done => { const go = () => setTimeout(done, 300); if (document.readyState === 'complete') go(); else addEventListener('load', go, {once: true}); });
+  pageReady.then(loadAll);
 
   let p = 0, shown = 0, raf = 0, dir = 1, last = 0, playing = false, interacted = false, destroyed = false;
   const nearest = q => frames.reduce((best, f, i) => Math.abs(f.at - q) < Math.abs(frames[best].at - q) ? i : best, 0);
@@ -62,7 +64,7 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     observer = new IntersectionObserver(entries => {
       if (!entries.some(e => e.isIntersecting) || interacted) return;
       observer.disconnect();
-      loadAll().then(runIntro);
+      pageReady.then(loadAll).then(runIntro);
     }, {threshold: 0.5});
     observer.observe(frame);
   }
