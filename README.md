@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/muhammmmadziam1234-eng/portfolio/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/muhammmmadziam1234-eng/portfolio/actions/workflows/test.yml)
 
-The portfolio site of a freelance engineer for web maps and data tools: eight projects in three groups (geospatial and data, web applications, hardware and product design). Each project opens with something to try, and every number beside it links to the file in the project's own repository that holds it.
+The portfolio site of a designer and developer of web apps that make complex workflows easier to use: eight projects in three groups (geospatial and data, web applications, hardware and product design). Each project opens with something to try, and every number beside it links to the file in the project's own repository that holds it.
 
 It is plain HTML, CSS and JavaScript. There is no build step, no tracking, no cookies and no request to any other site.
 
@@ -80,7 +80,7 @@ Everything personal is in `site.config.js`. An empty value hides what it would s
 | `name` | Header, footer, home heading and page titles. Empty shows "Portfolio". |
 | `role` | One line under your name on the home page, and in the footer. |
 | `tagline` | One sentence under the role: what you build and for whom. |
-| `bio` | A few sentences for the About page. |
+| `bio` | The About page text: a sentence or two, or a list of paragraphs. Without it, About uses your role and tagline. |
 | `location` | Where you work from, on the About page. |
 | `availability` | For example "Taking new projects", on the About page. |
 | `email` | Adds "Send an email" to the contact band and an Email link to the footer. Only if you want it public. |
