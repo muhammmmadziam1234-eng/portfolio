@@ -87,6 +87,17 @@ export default {
 - **The service desk is shown as a recording**, because it needs a server. `scripts/record-tracker.mjs` in this repository starts the real app from a checkout of the project and drives it in a browser; the recording has a step list and an API tab beside it.
 - **Fonts and motion.** One variable font (Archivo, SIL Open Font Licence, in `assets/fonts`). Motion respects the system's reduced-motion setting, and the slider works without it.
 
+## Upwork pictures, videos and text
+
+Upwork cannot embed an interactive page, so a portfolio entry links to this site and carries a few pictures and a short video. These scripts make them from the real pages, so they cannot drift from the site (they write to `upwork/`, which is not committed):
+
+```bash
+node scripts/upwork/entries.mjs   # the text of each entry, with the character counts checked against Upwork's limits
+node scripts/upwork/plates.mjs    # 1500 by 1125 pictures of each demo in a telling state
+node scripts/upwork/record.mjs    # a short captioned clip per project, and a combined tour that stays under 60 seconds
+node scripts/record-tracker.mjs --repo ../service-request-tracker --node <path to Node 24>   # the service desk recording on the site
+```
+
 ## Limits
 
 - The 3D pictures are renders of concept studies. Nothing here claims a physical prototype exists.
