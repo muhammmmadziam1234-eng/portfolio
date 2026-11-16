@@ -17,7 +17,7 @@ export default async function ads(root, {project}) {
       h('img', {src: `assets/media/ads/${s.file}.jpg`, alt: s.alt, loading: 'lazy', width: 380, height: s.file.endsWith('square') ? 380 : 475})),
     h('figcaption', {}, `${s.name}, ${s.size} pixels`))));
   const videos = h('div', {class: 'videos'}, stories.map(s => h('figure', {},
-    h('video', {controls: true, preload: 'none', playsinline: true, muted: true, poster: `assets/media/ads/${s.file}-poster.jpg`, 'aria-describedby': `${s.file}-text`},
+    h('video', {controls: true, preload: 'none', playsinline: true, muted: true, 'aria-label': `${s.name} video, silent`, poster: `assets/media/ads/${s.file}-poster.jpg`, 'aria-describedby': `${s.file}-text`},
       h('source', {src: `assets/media/ads/${s.file}.mp4`, type: 'video/mp4'})),
     h('figcaption', {id: `${s.file}-text`, class: 'caption'}, h('strong', {}, s.name), '. ', s.text, ' ',
       h('a', {href: `assets/media/ads/${s.storyboard}.jpg`, target: '_blank', rel: 'noopener'}, 'Storyboard')))));

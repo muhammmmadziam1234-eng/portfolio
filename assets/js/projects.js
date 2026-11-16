@@ -47,9 +47,9 @@ export const projects = [
     slug: 'pcb', repo: 'industrial-sensor-carrier-pcb', widget: 'pcb', thumb: 'assets/img/pcb.jpg',
     title: 'Meridian four-layer carrier board', kind: 'PCB design in KiCad',
     short: 'A 3.3 V controller board, checked from its fabrication files.',
-    summary: 'A four-layer carrier for a 3.3 V controller with RS-485, SPI, I²C, analog sensing and low-side loads. The view is drawn from the saved KiCad board, and a separate script re-reads the Gerber and drill files with gerbonara to check them against that board.',
-    tryShort: 'Click any track to light up its whole net.',
-    tryIt: ['Click a track, pad or via to light up everything on its net.', 'Switch layers, or choose a part from the list to find it on the board.'],
+    summary: 'A four-layer carrier for a 3.3 V controller with RS-485, SPI, I²C, analog sensing and low-side loads. The view is drawn from the saved KiCad board, and a separate script re-reads the Gerber and drill files (the files a factory uses to make a board) with gerbonara to check them against that board.',
+    tryShort: 'Click any track to light up the whole connection it belongs to.',
+    tryIt: ['Click a track, pad or via to light up everything on its net, the one electrical connection it belongs to.', 'Switch layers, or choose a part from the list to find it on the board.'],
     evidence: [
       {label: 'Fabrication-file check', note: 'Reads only the files a fabricator receives', path: 'reports/independent-fabrication-check.json'},
       {label: 'KiCad rule check', note: 'Layout rule results from KiCad 10, including the rules switched off', path: 'reports/drc.json'},
@@ -89,7 +89,7 @@ export const projects = [
     slug: 'tracker', repo: 'service-request-tracker', widget: 'recording', thumb: 'assets/img/tracker.jpg',
     title: 'Relay Desk service request tracker', kind: 'Full-stack web app in TypeScript',
     short: 'A service desk with sign-in, roles and conflict-safe edits.',
-    summary: 'An internal service desk: sign-in with roles, requests with priority and assignee, comments, and edits that cannot silently overwrite each other. The server is TypeScript run directly by Node, with an OpenAPI file and tests that check the API against it.',
+    summary: 'An internal service desk: sign-in with roles, requests with priority and assignee, comments, and edits that cannot silently overwrite each other. The server is TypeScript run directly by Node, with an OpenAPI file (a written list of every request the server accepts) and tests that check the API against it.',
     tryShort: 'Watch the real app, then read the API contract.',
     tryIt: ['Watch the recording: sign in as a requester and open a request, then as an agent assign it and comment, then see what happens when a colleague saves the same request first.', 'Open the API contract tab to see every route and a real session with the API, then the OpenAPI file or the tests for the detail.'],
     evidence: [
@@ -107,7 +107,7 @@ export const projects = [
     tryShort: 'Build a three-room quote and print it.',
     tryIt: ['Add a second room and switch the units to feet.', 'Press Print and look at the quote page.'],
     evidence: [
-      {label: 'Lighthouse scores', note: 'Measured on a local server, with the date and versions', path: 'docs/evidence/lighthouse.json'},
+      {label: 'Lighthouse scores', note: 'Google\'s page-quality check, run on a local server, with the date and versions', path: 'docs/evidence/lighthouse.json'},
       {label: 'Pricing engine', note: 'Integer arithmetic only, rules written out in the README', path: 'quote.mjs'},
       {label: 'README', note: 'Pricing rules, decisions and limits', path: 'README.md'}],
     stack: 'JavaScript with no dependencies',

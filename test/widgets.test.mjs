@@ -286,3 +286,21 @@ test('every project has a thumbnail, and every file the pages point at exists', 
     if (p.embed) assert.ok(existsSync(new URL(`../${p.embed}`, import.meta.url)), p.embed);
   }
 });
+
+test('on a phone, buttons, tabs and form controls are at least 24 by 24 pixels, and the main ones 44 pixels tall', async () => {
+  const context = await env.browser.newContext({viewport: {width: 360, height: 740}, hasTouch: true, isMobile: true, reducedMotion: 'reduce'});
+  try {
+    for (const slug of ['sensor', 'lamp', 'pcb', 'kit', 'tracker']) {
+      const page = await context.newPage();
+      await page.goto(`${env.base}#/p/${slug}`, {waitUntil: 'load'});
+      await page.waitForFunction(() => !document.querySelector('main[aria-busy]'));
+      if (slug === 'pcb') await page.getByText(/Bill of materials/).click();
+      const small = await page.evaluate(() => [...document.querySelectorAll('button, [role=tab], select, input:not([type=file]):not([type=range]), summary')]
+        .filter(el => el.checkVisibility() && !el.closest('.sr'))
+        .map(el => { const r = el.getBoundingClientRect(); return {el: `${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''} "${(el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 24)}"`, w: Math.round(r.width), h: Math.round(r.height)}; })
+        .filter(r => r.w < 24 || r.h < 24));
+      assert.deepEqual(small, [], `${slug}: controls smaller than 24 by 24 pixels`);
+      await page.close();
+    }
+  } finally { await context.close(); }
+});

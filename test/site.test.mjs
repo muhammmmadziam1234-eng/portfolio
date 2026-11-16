@@ -50,10 +50,12 @@ test('moving between projects keeps the tour order and announces the new page', 
   } finally { await context.close(); }
 });
 
-test('an unknown address falls back to the home page', async () => {
+test('an unknown address says so and offers the projects, instead of showing the home page', async () => {
   const {page, context, log} = await open(env.browser, env.base, '#/p/nothing-here', {reducedMotion: 'reduce'});
   try {
-    assert.match(await page.locator('h1').innerText(), /Eight projects/);
+    assert.match(await page.locator('h1').innerText(), /That page does not exist/);
+    assert.match(await page.title(), /not found/i);
+    assert.equal(await page.getByRole('link', {name: 'See all projects'}).getAttribute('href'), '#/all');
     assert.deepEqual(log.errors, []);
   } finally { await context.close(); }
 });

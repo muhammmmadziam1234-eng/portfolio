@@ -123,7 +123,7 @@ const extractors = {
     const lines = file => Number(cov.match(new RegExp(`^${file.replace('.', '\\.')}\\s*\\|\\s*([\\d.]+)`, 'm'))?.[1]);
     const sc = lh.medianScores;
     return [
-      {label: 'Lighthouse (simulated phone)', value: `${sc.performance} performance, ${sc.accessibility} accessibility, ${sc['best-practices']} best practices, ${sc.seo} SEO`, path: e + 'lighthouse.json',
+      {label: 'Lighthouse page-quality scores (simulated phone)', value: `${sc.performance} performance, ${sc.accessibility} accessibility, ${sc['best-practices']} best practices, ${sc.seo} SEO`, path: e + 'lighthouse.json',
         line: `Lighthouse on a simulated phone: ${sc.performance}, ${sc.accessibility}, ${sc['best-practices']} and ${sc.seo} for performance, accessibility, best practices and SEO.`},
       {label: 'Tests', value: `${t.unit.pass} unit and ${t.e2e.pass} browser tests pass`, path: e + 'tests.json',
         line: `${t.unit.pass} unit and ${t.e2e.pass} browser tests pass; the pricing engine has ${lines('quote.mjs')}% line coverage.`},
@@ -191,7 +191,7 @@ const extractors = {
     repo.used.add('cad/meridian-carrier.kicad_pcb'); repo.used.add('cad/bill-of-materials.csv');
     return [
       {label: 'Fabrication-file checks', value: `${passed} of ${total} pass`, path: p1,
-        line: `A separate script re-reads the Gerber and drill files and checks them against the board: ${passed} of ${total} checks pass.`},
+        line: `A separate script re-reads the factory files (Gerber and drill) and checks them against the board: ${passed} of ${total} checks pass.`},
       {label: 'KiCad layout rules', value: `${drc.violations.length} violations, ${drc.unconnected_items.length} unconnected`, path: p2,
         line: `KiCad ${drc.kicad_version.split('.')[0]} reports ${drc.violations.length} violations and ${drc.unconnected_items.length} unconnected items; ${drc.ignored_checks.length} checks are switched off and listed.`},
       {label: 'Board', value: `${m.board_mm[0]} × ${m.board_mm[1]} mm, ${layers} copper layers`, path: p1, line: ''},

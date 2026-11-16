@@ -77,8 +77,8 @@ main{min-height:100vh;outline:none}
 .caption{padding:10px 14px;border-top:1px solid var(--rule);color:var(--muted);font-size:.92rem}
 .exhibit-bar .caption{padding:0;border:0}
 .notes{display:grid;gap:22px;min-width:0}
-.notes h2{font-size:1rem;font-weight:650;font-stretch:106%;margin-bottom:6px;color:var(--ink)}
-.notes p,.notes li{font-size:.98rem}
+.notes h2,.exhibit-col h2{font-size:1rem;font-weight:650;font-stretch:106%;margin-bottom:6px;color:var(--ink)}
+.notes p,.notes li,.exhibit-col p{font-size:.98rem}
 .notes .try{counter-reset:step;display:grid;gap:8px}
 .notes .try li{counter-increment:step;display:grid;grid-template-columns:1.6em 1fr}
 .notes .try li::before{content:counter(step) ".";font-variant-numeric:tabular-nums;color:var(--muted)}
@@ -227,3 +227,16 @@ main{min-height:100vh;outline:none}
 .steps{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
 .steps .chip[aria-current=step]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .code{min-width:0}
+.exhibit-col{display:grid;gap:22px;min-width:0;align-content:start}
+.built{margin-top:10px;color:var(--muted);font-size:.92rem}
+.register td.go{padding-top:12px}
+.register .who strong{font-weight:600}
+.register .who strong a{text-decoration-thickness:1px}
+@media (max-width:720px){.bar nav{width:100%;justify-content:space-between;gap:0}}
+.pcb-side input[type=checkbox]{width:24px;height:24px;flex:none}
+.by{margin:0 0 10px;color:var(--muted);font-size:1.05rem}
+@media (pointer:coarse){
+  .chip,.tabs button,.btn,.pcb-side label,.bom button,.bom-wrap summary,.steps .chip{min-height:44px}
+  .bom button{min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+  .pcb-side label{align-items:center}
+}

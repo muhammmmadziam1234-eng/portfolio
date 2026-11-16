@@ -22,7 +22,8 @@ function route() {
   if (project && bySlug[project[1]]) return {name: 'project', slug: project[1]};
   if (hash === 'method') return {name: 'method'};
   if (hash === 'all') return {name: 'home', scrollTo: 'all'};
-  return {name: 'home'};
+  if (hash === '' || hash === '/') return {name: 'home'};
+  return {name: 'missing'};
 }
 
 function factLines(slug, count) {
@@ -85,6 +86,7 @@ function renderHome(current) {
     h('section', {class: 'hero', 'data-p': 'sensor'},
       h('div', {},
         h('h1', {tabindex: '-1'}, 'Eight projects you can try, each with its proof'),
+        config.name ? h('p', {class: 'by'}, `By ${config.name}${config.role ? `, ${config.role}` : ''}.`) : null,
         h('p', {class: 'lede'}, 'A circuit board, two 3D product studies, ad layouts and four software tools. Open one, use it, then open the file behind any number.'),
         h('div', {class: 'actions'}, h('a', {class: 'btn', href: `#/p/${projects[0].slug}`}, 'Take the tour'), h('a', {class: 'btn secondary', href: '#/all'}, 'See all projects')),
         h('p', {class: 'note'}, 'This page makes no outside requests and sets no cookies.')),
@@ -102,15 +104,27 @@ function renderHome(current) {
   if (current.scrollTo) requestAnimationFrame(() => $('#' + current.scrollTo)?.scrollIntoView());
 }
 
+function renderMissing() {
+  main.replaceChildren(h('section', {class: 'section'},
+    h('h1', {tabindex: '-1'}, 'That page does not exist'),
+    h('p', {class: 'intro'}, 'The link may be old or mistyped. The projects are all one click away.'),
+    h('p', {class: 'actions'}, h('a', {class: 'btn', href: '#/all'}, 'See all projects'), h('a', {class: 'btn secondary', href: '#/p/' + projects[0].slug}, 'Take the tour'))));
+  document.title = 'Page not found: portfolio';
+}
+
 async function renderProject(slug) {
   const index = projects.findIndex(p => p.slug === slug), p = projects[index];
   const prev = projects[index - 1], next = projects[index + 1];
   const exhibit = h('div', {class: 'exhibit'});
   const factItems = (facts[slug] ?? []);
+  const wide = p.widget === 'embed';
+  const limits = h('section', {}, h('h2', {}, 'Limits'), h('p', {class: 'limits'}, p.limits));
+  const repository = h('section', {}, h('p', {}, h('a', {class: 'btn', href: repoUrl(p.repo), target: '_blank', rel: 'noopener'}, 'Open the repository')), h('p', {class: 'built'}, `Built with ${p.stack}.`));
+  // The limits sit directly under the demo, where a visitor is looking. A demo that takes the whole width keeps them with the notes.
   const page = h('div', {'data-p': slug},
     h('div', {class: 'crumbs'}, h('a', {href: '#/all'}, 'All projects'), h('span', {}, `Project ${index + 1} of ${projects.length}`)),
     h('div', {class: 'stage-head'}, h('h1', {tabindex: '-1'}, p.title), h('p', {class: 'kind'}, p.kind)),
-    h('div', {class: p.widget === 'embed' ? 'stage wide' : 'stage'}, exhibit,
+    h('div', {class: wide ? 'stage wide' : 'stage'}, wide ? exhibit : h('div', {class: 'exhibit-col'}, exhibit, limits, repository),
       h('aside', {class: 'notes', 'aria-label': 'About this project'},
         h('section', {}, h('h2', {}, 'What it is'), h('p', {}, p.summary)),
         h('section', {}, h('h2', {}, 'Try this'), h('ol', {class: 'try'}, p.tryIt.map(t => h('li', {}, h('span', {}, t))))),
@@ -118,8 +132,7 @@ async function renderProject(slug) {
           h('dt', {}, f.label), h('dd', {}, f.value, ' ', f.path ? h('a', {href: repoUrl(p.repo, f.path), 'aria-label': `Source file for ${f.label}`, target: '_blank', rel: 'noopener'}, 'source') : null))))) : null,
         h('section', {}, h('h2', {}, 'Evidence you can open'), h('ul', {class: 'evidence'}, p.evidence.map(e => h('li', {},
           h('a', {href: repoUrl(p.repo, e.path), target: '_blank', rel: 'noopener'}, e.label), h('span', {}, e.note))))),
-        h('section', {}, h('h2', {}, 'Limits'), h('p', {class: 'limits'}, p.limits)),
-        h('section', {}, h('p', {}, h('a', {class: 'btn', href: repoUrl(p.repo), target: '_blank', rel: 'noopener'}, 'Open the repository')), h('p', {class: 'caption', style: null}, `Built with ${p.stack}.`)))),
+        wide ? limits : null, wide ? repository : null)),
     h('nav', {class: 'hop', 'aria-label': 'Move through the tour'},
       prev ? h('a', {href: `#/p/${prev.slug}`, rel: 'prev'}, h('small', {}, 'Previous project'), prev.title) : h('span', {}),
       next ? h('a', {href: `#/p/${next.slug}`, rel: 'next'}, h('small', {}, 'Next project'), next.title) : h('a', {href: '#/all'}, h('small', {}, 'End of the tour'), 'Back to all projects')));
@@ -145,6 +158,7 @@ async function render() {
   cleanup(); cleanup = () => {};
   setChrome(current);
   if (current.name === 'project') await renderProject(current.slug);
+  else if (current.name === 'missing') renderMissing();
   else if (current.name === 'method') {
     main.replaceChildren(methodSection(true));
     document.title = 'How the numbers are checked: portfolio';

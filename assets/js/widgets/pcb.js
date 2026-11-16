@@ -90,7 +90,7 @@ export default async function pcb(root) {
   const info = h('div', {class: 'pcb-info', role: 'status'}, 'Click a track, pad or via, or pick a net or part below.');
   const side = h('div', {class: 'pcb-side'},
     h('fieldset', {}, h('legend', {}, 'Layers'), layerBoxes.map(l => l.label)),
-    h('div', {}, h('label', {for: 'pcb-net'}, 'Net'), netSelect),
+    h('div', {}, h('label', {for: 'pcb-net'}, 'Connection (net)'), netSelect),
     h('div', {}, h('label', {for: 'pcb-part'}, 'Part'), partSelect),
     info);
   const zoomIn = h('button', {class: 'chip', type: 'button'}, 'Zoom in');

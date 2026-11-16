@@ -82,7 +82,7 @@
       "label": "Fabrication-file checks",
       "value": "26 of 26 pass",
       "path": "reports/independent-fabrication-check.json",
-      "line": "A separate script re-reads the Gerber and drill files and checks them against the board: 26 of 26 checks pass."
+      "line": "A separate script re-reads the factory files (Gerber and drill) and checks them against the board: 26 of 26 checks pass."
     },
     {
       "label": "KiCad layout rules",
@@ -201,7 +201,7 @@
   ],
   "paint": [
     {
-      "label": "Lighthouse (simulated phone)",
+      "label": "Lighthouse page-quality scores (simulated phone)",
       "value": "99 performance, 100 accessibility, 100 best practices, 100 SEO",
       "path": "docs/evidence/lighthouse.json",
       "line": "Lighthouse on a simulated phone: 99, 100, 100 and 100 for performance, accessibility, best practices and SEO."

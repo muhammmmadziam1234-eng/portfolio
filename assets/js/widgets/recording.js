@@ -14,7 +14,7 @@ export default async function recording(root, {project}) {
     fetch('data/tracker-curl.txt').then(r => r.text())
   ]);
 
-  const video = h('video', {controls: true, preload: 'metadata', playsinline: true, muted: true, poster: 'assets/media/tracker/poster.jpg', 'aria-describedby': 'rec-steps'},
+  const video = h('video', {controls: true, preload: 'metadata', playsinline: true, muted: true, 'aria-label': 'Recording of the Relay Desk service desk, silent', poster: 'assets/media/tracker/poster.jpg', 'aria-describedby': 'rec-steps'},
     h('source', {src: 'assets/media/tracker/walkthrough.mp4', type: 'video/mp4'}));
   const buttons = steps.map(step => h('button', {type: 'button', class: 'chip', onclick: () => { video.currentTime = step.at; video.play().catch(() => {}); }}, h('span', {class: 'num'}, clock(step.at)), ' ', step.text));
   const list = h('ol', {id: 'rec-steps', class: 'steps', 'aria-label': 'What the recording shows. Choose a step to jump to it.'}, buttons.map(b => h('li', {}, b)));
