@@ -8,7 +8,8 @@ const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
  *
  * Smooth layer: once every picture is decoded, a canvas laid over the <img> draws the sequence at an eased position, blending the two
  * nearest rendered pictures, so dragging, playing and the intro glide instead of stepping from picture to picture. When motion stops the
- * canvas settles onto the nearest rendered picture, so a picture at rest is always a real render, never a blend.
+ * canvas settles onto the nearest rendered picture, then hands over to the <img> itself (the browser scales an <img> with a better filter than
+ * a canvas gets, so a picture at rest is as clear as it can be). A picture at rest is always a real render, never a blend.
  * The <img> stays underneath as the source of truth (its src and alt follow the slider) and as the fallback: it is all a visitor sees
  * with reduced motion, without canvas, or before every picture has loaded.
  */
@@ -127,12 +128,18 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
   // `pos` is the position being drawn; it chases `p` on a critically damped spring (no overshoot, about a quarter of a second to arrive).
   // While the position is changing it blends the two rendered pictures either side of it. Once nothing has moved for a moment it
   // chases the nearest rendered picture instead, so it comes to rest on a true render with no ghost of its neighbour.
-  let pos = 0, vel = 0, smooth = false, sraf = 0, lastDraw = 0, box = null, resizer = null;
+  let pos = 0, vel = 0, smooth = false, live = false, epoch = 0, sraf = 0, lastDraw = 0, box = null, resizer = null;
   const ctx = canvas.getContext?.('2d', {alpha: false});
+  // The canvas gets exactly the device pixels the <img> would: no cap at 2x (a phone at 3x was drawn small and stretched, half as sharp),
+  // and the same snapped edges the browser uses for the picture, so nothing is resampled on its way to the screen.
+  // Only a very large screen is held back, to bound memory (about 16 million pixels is far more than the pictures can fill).
   const fit = () => {
     if (!img.clientWidth) return false;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2), w = Math.round(img.clientWidth * dpr), hgt = Math.round(img.clientHeight * dpr);
-    Object.assign(canvas.style, {left: img.offsetLeft + 'px', top: img.offsetTop + 'px', width: img.clientWidth + 'px', height: img.clientHeight + 'px'});
+    const r = img.getBoundingClientRect(), f = frame.getBoundingClientRect();
+    let dpr = window.devicePixelRatio || 1;
+    dpr = Math.min(dpr, Math.sqrt(16e6 / Math.max(1, r.width * r.height)));
+    const w = Math.max(1, Math.round(r.right * dpr) - Math.round(r.left * dpr)), hgt = Math.max(1, Math.round(r.bottom * dpr) - Math.round(r.top * dpr));
+    Object.assign(canvas.style, {left: r.left - f.left + 'px', top: r.top - f.top + 'px', width: r.width + 'px', height: r.height + 'px'});
     if (canvas.width !== w || canvas.height !== hgt) { canvas.width = w; canvas.height = hgt; }
     box = {w, h: hgt};
     return true;
@@ -143,13 +150,20 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     const a = frames[lo], b = frames[Math.min(lo + 1, frames.length - 1)];
     const k = b.at > a.at ? clamp((pos - a.at) / (b.at - a.at), 0, 1) : 0;
     const base = pics[lo], over = pics[Math.min(lo + 1, frames.length - 1)];
-    const iw = base.naturalWidth, ih = base.naturalHeight, sc = Math.min(box.w / iw, box.h / ih), dw = iw * sc, dh = ih * sc, dx = (box.w - dw) / 2, dy = (box.h - dh) / 2;
+    const iw = base.naturalWidth, ih = base.naturalHeight, sc = Math.min(box.w / iw, box.h / ih), dw = Math.round(iw * sc), dh = Math.round(ih * sc), dx = Math.round((box.w - dw) / 2), dy = Math.round((box.h - dh) / 2);
     ctx.imageSmoothingQuality = 'high';
     ctx.fillStyle = '#232c33'; ctx.fillRect(0, 0, box.w, box.h);
     ctx.drawImage(k > 0.995 ? over : base, dx, dy, dw, dh);
     if (k > 0.005 && k <= 0.995) { ctx.globalAlpha = k; ctx.drawImage(over, dx, dy, dw, dh); ctx.globalAlpha = 1; }
     return true;
   }
+  // While the picture moves the canvas is shown (class `live`); at rest the <img> is. Both show the same render.
+  const goLive = () => { if (live || !draw()) return; live = true; frame.classList.add('live'); };
+  const rest = () => {
+    const mine = epoch; draw();
+    // Hand back to the <img> only once it has decoded the picture it is about to show, so there is never a blank or a flash.
+    (img.decode ? img.decode() : Promise.resolve()).then(() => { if (mine === epoch && live) { live = false; frame.classList.remove('live'); } }, () => {});
+  };
   function smoothStep(now) {
     sraf = 0;
     if (destroyed) return;
@@ -158,18 +172,19 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     const goal = idle ? frames[shown].at : p;
     const w = 17, x = w * dt, ex = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x), change = pos - goal, temp = (vel + w * change) * dt;
     vel = (vel - w * temp) * ex; pos = goal + (change + temp) * ex;
-    if (Math.abs(pos - goal) < 0.0004 && Math.abs(vel) < 0.004 && idle) { pos = goal; vel = 0; draw(); lastDraw = 0; return; }
+    if (Math.abs(pos - goal) < 0.0004 && Math.abs(vel) < 0.004 && idle) { pos = goal; vel = 0; lastDraw = 0; rest(); return; }
+    if (!live && Math.abs(pos - goal) > 0.0004) goLive();
     draw();
     sraf = requestAnimationFrame(smoothStep);
   }
   function startSmooth() {
     if (smooth || destroyed || !ctx || reducedMotion() || !frames.every((_, i) => pics[i])) return;
     smooth = true; pos = p; vel = 0;
-    kick = () => { if (!sraf) sraf = requestAnimationFrame(smoothStep); };
-    // The canvas is shown only after it has drawn once, so a scrubber inside a hidden tab never shows a blank picture.
-    resizer = new ResizeObserver(() => { box = null; if (draw()) frame.classList.add('smooth'); });
+    kick = () => { epoch++; if (!sraf) sraf = requestAnimationFrame(smoothStep); };
+    // The canvas is shown only after it has drawn (goLive), so a scrubber inside a hidden tab never shows a blank picture.
+    resizer = new ResizeObserver(() => { box = null; draw(); });
     resizer.observe(frame);
-    if (draw()) frame.classList.add('smooth');
+    draw(); frame.classList.add('smooth');
     kick();
   }
   set(initial);

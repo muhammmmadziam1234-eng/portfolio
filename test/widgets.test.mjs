@@ -97,13 +97,33 @@ test('home: motion glides between the rendered pictures, and a picture at rest i
       await new Promise(r => setTimeout(r, 900));
       const ref = document.createElement('canvas'); ref.width = canvas.width; ref.height = canvas.height;
       const x = ref.getContext('2d'), pic = new Image(); pic.src = img.src; await pic.decode();
-      const k = Math.min(canvas.width / pic.naturalWidth, canvas.height / pic.naturalHeight), w = pic.naturalWidth * k, h = pic.naturalHeight * k;
-      x.fillStyle = '#232c33'; x.fillRect(0, 0, canvas.width, canvas.height); x.imageSmoothingQuality = 'high'; x.drawImage(pic, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+      const k = Math.min(canvas.width / pic.naturalWidth, canvas.height / pic.naturalHeight), w = Math.round(pic.naturalWidth * k), h = Math.round(pic.naturalHeight * k);
+      x.fillStyle = '#232c33'; x.fillRect(0, 0, canvas.width, canvas.height); x.imageSmoothingQuality = 'high'; x.drawImage(pic, Math.round((canvas.width - w) / 2), Math.round((canvas.height - h) / 2), w, h);
       const a = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data, b = x.getImageData(0, 0, canvas.width, canvas.height).data;
       let diff = 0; for (let i = 0; i < a.length; i += 28) diff += Math.abs(a[i] - b[i]);
       return {diff: diff / (a.length / 28), src: img.getAttribute('src')};
     });
     assert.ok(rest.diff < 0.5, `at rest the canvas differs from ${rest.src} by ${rest.diff}`);
+  });
+});
+
+test('home: while the sensor moves the canvas is shown, and at rest the <img> itself is (the clearest scaling)', async () => {
+  await withPage('', {reducedMotion: 'no-preference'}, async page => {
+    await page.waitForSelector('.scrub-frame.smooth', {timeout: 10000});
+    await page.getByRole('slider').focus();
+    await page.keyboard.press('Home');
+    await page.waitForFunction(() => !document.querySelector('.scrub-frame.live'), null, {timeout: 5000});
+    assert.equal(await page.locator('.scrub-frame.live').count(), 0, 'at rest the frame is not live');
+    assert.equal(await page.locator('.scrub-frame img').evaluate(el => getComputedStyle(el).opacity), '1', 'the <img> is visible at rest');
+    const during = await page.evaluate(async () => {
+      const slider = document.querySelector('.scrub-controls input'), frame = document.querySelector('.scrub-frame');
+      slider.value = '700'; slider.dispatchEvent(new Event('input', {bubbles: true}));
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      return frame.classList.contains('live') && getComputedStyle(document.querySelector('.scrub-canvas')).display === 'block';
+    });
+    assert.equal(during, true, 'the canvas is shown while the picture moves');
+    await page.waitForFunction(() => !document.querySelector('.scrub-frame.live'), null, {timeout: 5000});
+    assert.equal(await page.locator('.scrub-frame.live').count(), 0, 'and it hands back to the <img> when motion stops');
   });
 });
 
