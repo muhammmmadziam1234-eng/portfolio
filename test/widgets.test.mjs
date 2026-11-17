@@ -52,6 +52,70 @@ test('home: the intro plays once, and stops as soon as the visitor touches the s
   });
 });
 
+test('home: the intro starts only once every frame is decoded, so the first run is as smooth as a replay', async () => {
+  // The first run used to decode each picture at the moment it was first shown; a replay had nothing left to decode.
+  const context = await env.browser.newContext({viewport: {width: 1280, height: 800}, reducedMotion: 'no-preference'});
+  try {
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      const decoded = new Set(), real = HTMLImageElement.prototype.decode;
+      HTMLImageElement.prototype.decode = function () { return real.call(this).then(() => { decoded.add(this.currentSrc); }); };
+      window.__atIntroStart = null;
+      const watch = () => {
+        const slider = document.querySelector('.scrub-controls input');
+        if (slider && Number(slider.value) > 0 && window.__atIntroStart === null) window.__atIntroStart = [...decoded].filter(s => /explode-\d+\.webp/.test(s)).length;
+        if (window.__atIntroStart === null) requestAnimationFrame(watch);
+      };
+      requestAnimationFrame(watch);
+    });
+    await page.goto(env.base, {waitUntil: 'load'});
+    await page.waitForFunction(() => window.__atIntroStart !== null, null, {timeout: 10000});
+    assert.equal(await page.evaluate(() => window.__atIntroStart), explodeFrames.length);
+  } finally { await context.close(); }
+});
+
+test('home: motion glides between the rendered pictures, and a picture at rest is always a real render', async () => {
+  await withPage('', {reducedMotion: 'no-preference'}, async page => {
+    await page.waitForSelector('.scrub-frame.smooth', {timeout: 10000});
+    assert.equal(await page.locator('.scrub-canvas').getAttribute('aria-hidden'), 'true', 'the canvas is decoration; the <img> carries the alt text');
+    assert.match(await page.locator('.scrub-frame img').getAttribute('alt'), /Cirrus sensor/);
+    await page.getByRole('slider').focus();
+    await page.keyboard.press('Home');
+    await page.waitForTimeout(700);
+    const run = await page.evaluate(async () => {
+      const slider = document.querySelector('.scrub-controls input'), canvas = document.querySelector('.scrub-canvas'), seen = new Set();
+      slider.value = '1000'; slider.dispatchEvent(new Event('input', {bubbles: true}));
+      for (let i = 0; i < 30; i++) { await new Promise(r => requestAnimationFrame(r)); seen.add(canvas.toDataURL('image/jpeg', 0.2)); }
+      return seen.size;
+    });
+    // Eight rendered pictures lie between the first and last of the final stretch alone; the old widget showed one jump.
+    assert.ok(run > 12, `the canvas passed through ${run} different pictures`);
+    // At rest: set a position between two renders; the canvas must equal the nearest render drawn alone (no ghost of its neighbour).
+    const rest = await page.evaluate(async () => {
+      const slider = document.querySelector('.scrub-controls input'), canvas = document.querySelector('.scrub-canvas'), img = document.querySelector('.scrub-frame img');
+      slider.value = '437'; slider.dispatchEvent(new Event('input', {bubbles: true}));
+      await new Promise(r => setTimeout(r, 900));
+      const ref = document.createElement('canvas'); ref.width = canvas.width; ref.height = canvas.height;
+      const x = ref.getContext('2d'), pic = new Image(); pic.src = img.src; await pic.decode();
+      const k = Math.min(canvas.width / pic.naturalWidth, canvas.height / pic.naturalHeight), w = pic.naturalWidth * k, h = pic.naturalHeight * k;
+      x.fillStyle = '#232c33'; x.fillRect(0, 0, canvas.width, canvas.height); x.imageSmoothingQuality = 'high'; x.drawImage(pic, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+      const a = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data, b = x.getImageData(0, 0, canvas.width, canvas.height).data;
+      let diff = 0; for (let i = 0; i < a.length; i += 28) diff += Math.abs(a[i] - b[i]);
+      return {diff: diff / (a.length / 28), src: img.getAttribute('src')};
+    });
+    assert.ok(rest.diff < 0.5, `at rest the canvas differs from ${rest.src} by ${rest.diff}`);
+  });
+});
+
+test('home: with motion reduced the sensor stays a plain picture, with no canvas shown', async () => {
+  await withPage('', {reducedMotion: 'reduce'}, async page => {
+    await page.waitForTimeout(1200);
+    assert.equal(await page.locator('.scrub-frame.smooth').count(), 0);
+    assert.equal(await page.locator('.scrub-canvas').isVisible(), false);
+    assert.equal(await page.locator('.scrub-frame img').isVisible(), true);
+  });
+});
+
 test('sensor: tabs work with the arrow keys, and the drawing sheets zoom and switch', async () => {
   await withPage('#/p/sensor', {}, async page => {
     const first = page.getByRole('tab', {name: 'Pull it apart'});
