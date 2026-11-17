@@ -5,11 +5,18 @@ const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 /**
  * An image sequence you can scrub with a slider, by dragging the picture, or by playing it.
  * frames: [{src, at, alt}] with `at` from 0 to 1. Returns {set, get, destroy}.
+ *
+ * Smooth layer: once every picture is decoded, a canvas laid over the <img> draws the sequence at an eased position, blending the two
+ * nearest rendered pictures, so dragging, playing and the intro glide instead of stepping from picture to picture. When motion stops the
+ * canvas settles onto the nearest rendered picture, so a picture at rest is always a real render, never a blend.
+ * The <img> stays underneath as the source of truth (its src and alt follow the slider) and as the fallback: it is all a visitor sees
+ * with reduced motion, without canvas, or before every picture has loaded.
  */
 export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLabels = ['Start', 'End'], valueText = p => `${Math.round(p * 100)} percent`,
   intro = false, caption = '', onChange = null, initial = 0}) {
   const img = h('img', {src: frames[0].src, alt: frames[0].alt ?? '', draggable: 'false', decoding: 'async', fetchpriority: 'high'});
-  const frame = h('div', {class: 'scrub-frame'}, img);
+  const canvas = h('canvas', {class: 'scrub-canvas', 'aria-hidden': 'true'});
+  const frame = h('div', {class: 'scrub-frame'}, img, canvas);
   frame.style.setProperty('--ratio', ratio);
   const range = h('input', {type: 'range', min: '0', max: '1000', step: '1', value: '0', 'aria-label': label});
   const play = h('button', {class: 'btn secondary small', type: 'button', 'aria-pressed': 'false'}, 'Play');
@@ -22,16 +29,18 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
   // first run that happens about sixty times a second in the middle of the intro (the lag and the soft, late pictures).
   // So each one is decoded here, and kept in `warm` so the browser does not throw the decoded pixels away before they are shown.
   let loading = null;
-  const warm = [];
-  const warmUp = src => new Promise(done => {
+  const warm = [], pics = [];
+  const warmUp = (src, i) => new Promise(done => {
     const pre = new Image(); pre.decoding = 'async'; pre.src = src; warm.push(pre);
-    if (pre.decode) pre.decode().then(done, done); else { pre.onload = pre.onerror = done; }
+    const ok = () => { pics[i] = pre; done(); };
+    if (pre.decode) pre.decode().then(ok, done); else { pre.onload = ok; pre.onerror = done; }
   });
-  const loadAll = () => loading ??= Promise.all(frames.map(f => warmUp(f.src)));
+  const loadAll = () => loading ??= Promise.all(frames.map((f, i) => warmUp(f.src, i))).then(startSmooth);
   const pageReady = new Promise(done => { const go = () => setTimeout(done, 300); if (document.readyState === 'complete') go(); else addEventListener('load', go, {once: true}); });
   pageReady.then(loadAll);
 
   let p = 0, shown = 0, raf = 0, dir = 1, last = 0, playing = false, interacted = false, destroyed = false;
+  let moved = 0, kick = () => {}; // when the position last changed; wakes the smooth layer
   const nearest = q => frames.reduce((best, f, i) => Math.abs(f.at - q) < Math.abs(frames[best].at - q) ? i : best, 0);
   function set(q) {
     p = clamp(q, 0, 1);
@@ -39,6 +48,7 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     if (i !== shown) { shown = i; img.src = frames[i].src; img.alt = frames[i].alt ?? ''; }
     range.value = String(Math.round(p * 1000));
     range.setAttribute('aria-valuetext', valueText(p, frames[i], i));
+    moved = performance.now(); kick();
     onChange?.(p, frames[i], i);
   }
   const halt = () => { cancelAnimationFrame(raf); raf = 0; playing = false; play.setAttribute('aria-pressed', 'false'); play.textContent = 'Play'; };
@@ -46,9 +56,34 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
 
   range.addEventListener('input', () => { touch(); set(Number(range.value) / 1000); });
   let drag = null;
-  frame.addEventListener('pointerdown', e => { touch(); drag = {x: e.clientX, p}; frame.setPointerCapture(e.pointerId); });
-  frame.addEventListener('pointermove', e => { if (drag) set(drag.p + (e.clientX - drag.x) / frame.clientWidth * 1.3); });
-  const release = () => { drag = null; };
+  frame.addEventListener('pointerdown', e => { touch(); drag = {x: e.clientX, p, trail: [[performance.now(), p]]}; frame.setPointerCapture(e.pointerId); });
+  frame.addEventListener('pointermove', e => {
+    if (!drag) return;
+    set(drag.p + (e.clientX - drag.x) / frame.clientWidth * 1.3);
+    const now = performance.now(); drag.trail.push([now, p]);
+    while (drag.trail.length > 2 && now - drag.trail[0][0] > 90) drag.trail.shift();
+  });
+  // A flick carries on after the finger lifts and slows to a stop (picture units a second, falling by about half every 0.1 s).
+  function glide(v) {
+    let t0 = performance.now();
+    const go = now => {
+      if (destroyed) return;
+      const dt = Math.min(0.05, (now - t0) / 1000); t0 = now;
+      v *= Math.exp(-dt * 6.5);
+      const next = clamp(p + v * dt, 0, 1);
+      set(next);
+      if (Math.abs(v) < 0.02 || next <= 0 || next >= 1) { raf = 0; return; }
+      raf = requestAnimationFrame(go);
+    };
+    raf = requestAnimationFrame(go);
+  }
+  const release = () => {
+    const d = drag; drag = null;
+    if (!d || reducedMotion() || d.trail.length < 2) return;
+    const [t1, p1] = d.trail[0], [t2, p2] = d.trail[d.trail.length - 1];
+    const v = t2 > t1 ? (p2 - p1) / ((t2 - t1) / 1000) : 0;
+    if (Math.abs(v) > 0.12 && performance.now() - t2 < 80) glide(Math.max(-1.8, Math.min(1.8, v)));
+  };
   frame.addEventListener('pointerup', release); frame.addEventListener('pointercancel', release);
 
   function tick(now) {
@@ -87,6 +122,56 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     };
     raf = requestAnimationFrame(step);
   }
+
+  // ---- The smooth layer ----
+  // `pos` is the position being drawn; it chases `p` on a critically damped spring (no overshoot, about a quarter of a second to arrive).
+  // While the position is changing it blends the two rendered pictures either side of it. Once nothing has moved for a moment it
+  // chases the nearest rendered picture instead, so it comes to rest on a true render with no ghost of its neighbour.
+  let pos = 0, vel = 0, smooth = false, sraf = 0, lastDraw = 0, box = null, resizer = null;
+  const ctx = canvas.getContext?.('2d', {alpha: false});
+  const fit = () => {
+    if (!img.clientWidth) return false;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), w = Math.round(img.clientWidth * dpr), hgt = Math.round(img.clientHeight * dpr);
+    Object.assign(canvas.style, {left: img.offsetLeft + 'px', top: img.offsetTop + 'px', width: img.clientWidth + 'px', height: img.clientHeight + 'px'});
+    if (canvas.width !== w || canvas.height !== hgt) { canvas.width = w; canvas.height = hgt; }
+    box = {w, h: hgt};
+    return true;
+  };
+  function draw() {
+    if (!box && !fit()) return false;
+    const lo = Math.max(0, Math.min(frames.length - 2, frames.findLastIndex(f => f.at <= pos)));
+    const a = frames[lo], b = frames[Math.min(lo + 1, frames.length - 1)];
+    const k = b.at > a.at ? clamp((pos - a.at) / (b.at - a.at), 0, 1) : 0;
+    const base = pics[lo], over = pics[Math.min(lo + 1, frames.length - 1)];
+    const iw = base.naturalWidth, ih = base.naturalHeight, sc = Math.min(box.w / iw, box.h / ih), dw = iw * sc, dh = ih * sc, dx = (box.w - dw) / 2, dy = (box.h - dh) / 2;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#232c33'; ctx.fillRect(0, 0, box.w, box.h);
+    ctx.drawImage(k > 0.995 ? over : base, dx, dy, dw, dh);
+    if (k > 0.005 && k <= 0.995) { ctx.globalAlpha = k; ctx.drawImage(over, dx, dy, dw, dh); ctx.globalAlpha = 1; }
+    return true;
+  }
+  function smoothStep(now) {
+    sraf = 0;
+    if (destroyed) return;
+    const dt = Math.min(0.05, Math.max(0.001, (now - (lastDraw || now - 16)) / 1000)); lastDraw = now;
+    const idle = now - moved > 110 && !playing && !drag;
+    const goal = idle ? frames[shown].at : p;
+    const w = 17, x = w * dt, ex = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x), change = pos - goal, temp = (vel + w * change) * dt;
+    vel = (vel - w * temp) * ex; pos = goal + (change + temp) * ex;
+    if (Math.abs(pos - goal) < 0.0004 && Math.abs(vel) < 0.004 && idle) { pos = goal; vel = 0; draw(); lastDraw = 0; return; }
+    draw();
+    sraf = requestAnimationFrame(smoothStep);
+  }
+  function startSmooth() {
+    if (smooth || destroyed || !ctx || reducedMotion() || !frames.every((_, i) => pics[i])) return;
+    smooth = true; pos = p; vel = 0;
+    kick = () => { if (!sraf) sraf = requestAnimationFrame(smoothStep); };
+    // The canvas is shown only after it has drawn once, so a scrubber inside a hidden tab never shows a blank picture.
+    resizer = new ResizeObserver(() => { box = null; if (draw()) frame.classList.add('smooth'); });
+    resizer.observe(frame);
+    if (draw()) frame.classList.add('smooth');
+    kick();
+  }
   set(initial);
-  return {set, get: () => p, destroy() { destroyed = true; halt(); observer?.disconnect(); warm.length = 0; }};
+  return {set, get: () => p, destroy() { destroyed = true; halt(); cancelAnimationFrame(sraf); resizer?.disconnect(); observer?.disconnect(); warm.length = 0; pics.length = 0; }};
 }
