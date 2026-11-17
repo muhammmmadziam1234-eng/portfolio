@@ -52,6 +52,28 @@ test('home: the intro plays once, and stops as soon as the visitor touches the s
   });
 });
 
+test('home: the intro starts only once every frame is decoded, so the first run is as smooth as a replay', async () => {
+  // The first run used to decode each picture at the moment it was first shown; a replay had nothing left to decode.
+  const context = await env.browser.newContext({viewport: {width: 1280, height: 800}, reducedMotion: 'no-preference'});
+  try {
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      const decoded = new Set(), real = HTMLImageElement.prototype.decode;
+      HTMLImageElement.prototype.decode = function () { return real.call(this).then(() => { decoded.add(this.currentSrc); }); };
+      window.__atIntroStart = null;
+      const watch = () => {
+        const slider = document.querySelector('.scrub-controls input');
+        if (slider && Number(slider.value) > 0 && window.__atIntroStart === null) window.__atIntroStart = [...decoded].filter(s => /explode-\d+\.webp/.test(s)).length;
+        if (window.__atIntroStart === null) requestAnimationFrame(watch);
+      };
+      requestAnimationFrame(watch);
+    });
+    await page.goto(env.base, {waitUntil: 'load'});
+    await page.waitForFunction(() => window.__atIntroStart !== null, null, {timeout: 10000});
+    assert.equal(await page.evaluate(() => window.__atIntroStart), explodeFrames.length);
+  } finally { await context.close(); }
+});
+
 test('sensor: tabs work with the arrow keys, and the drawing sheets zoom and switch', async () => {
   await withPage('#/p/sensor', {}, async page => {
     const first = page.getByRole('tab', {name: 'Pull it apart'});

@@ -18,8 +18,16 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     caption ? h('p', {class: 'caption'}, caption) : null);
   // The first picture loads with the page. The rest load once the page is idle, or at the first touch, whichever comes first.
   // The intro waits for the same moment, so its pictures never compete with the first one while the page is loading.
+  // "Loaded" is not enough: a picture that arrived but was never decoded is decoded at the moment it is first shown, and on the
+  // first run that happens about sixty times a second in the middle of the intro (the lag and the soft, late pictures).
+  // So each one is decoded here, and kept in `warm` so the browser does not throw the decoded pixels away before they are shown.
   let loading = null;
-  const loadAll = () => loading ??= Promise.all(frames.map(f => new Promise(done => { const pre = new Image(); pre.onload = pre.onerror = done; pre.src = f.src; })));
+  const warm = [];
+  const warmUp = src => new Promise(done => {
+    const pre = new Image(); pre.decoding = 'async'; pre.src = src; warm.push(pre);
+    if (pre.decode) pre.decode().then(done, done); else { pre.onload = pre.onerror = done; }
+  });
+  const loadAll = () => loading ??= Promise.all(frames.map(f => warmUp(f.src)));
   const pageReady = new Promise(done => { const go = () => setTimeout(done, 300); if (document.readyState === 'complete') go(); else addEventListener('load', go, {once: true}); });
   pageReady.then(loadAll);
 
@@ -80,5 +88,5 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     raf = requestAnimationFrame(step);
   }
   set(initial);
-  return {set, get: () => p, destroy() { destroyed = true; halt(); observer?.disconnect(); }};
+  return {set, get: () => p, destroy() { destroyed = true; halt(); observer?.disconnect(); warm.length = 0; }};
 }
