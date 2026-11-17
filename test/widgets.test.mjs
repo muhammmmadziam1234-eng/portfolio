@@ -192,6 +192,34 @@ test('home: if the large pictures cannot load, the standard one stays and everyt
   } finally { await context.close(); }
 });
 
+test('home: if drawing is slow the canvas steps down to fewer pixels, and the picture at rest is still the full one', async () => {
+  const context = await env.browser.newContext({viewport: {width: 1280, height: 800}, deviceScaleFactor: 1, reducedMotion: 'no-preference'});
+  try {
+    const page = await context.newPage();
+    // Make every canvas draw take 28 ms, whatever machine runs the test, so the frame rate is slow for certain.
+    await page.addInitScript(() => {
+      const real = CanvasRenderingContext2D.prototype.drawImage; window.__slow = false;
+      CanvasRenderingContext2D.prototype.drawImage = function (...a) { if (window.__slow) { const t = performance.now(); while (performance.now() - t < 28); } return real.apply(this, a); };
+    });
+    await page.goto(env.base, {waitUntil: 'load'});
+    await page.waitForSelector('.scrub-frame.smooth', {timeout: 10000});
+    await page.getByRole('slider').focus();
+    await page.keyboard.press('Home'); // stops the intro
+    await page.waitForFunction(() => !document.querySelector('.scrub-frame.live'), null, {timeout: 6000});
+    const full = await page.locator('.scrub-canvas').evaluate(c => c.width);
+    await page.evaluate(() => { window.__slow = true; });
+    await page.evaluate(async () => {
+      const s = document.querySelector('.scrub-controls input');
+      for (let i = 0; i < 110; i++) { s.value = String(Math.round(500 + 480 * Math.sin(i / 5))); s.dispatchEvent(new Event('input', {bubbles: true})); await new Promise(r => setTimeout(r, 33)); }
+    });
+    const small = await page.locator('.scrub-canvas').evaluate(c => c.width);
+    assert.ok(small <= full * 0.75, `the canvas went from ${full} to ${small} pixels wide; it should have stepped down`);
+    await page.evaluate(() => { window.__slow = false; });
+    await page.waitForFunction(() => { const f = document.querySelector('.scrub-frame'); return !f.classList.contains('live') && f.querySelector('img').complete; }, null, {timeout: 8000});
+    assert.equal(await page.locator('.scrub-frame img').evaluate(i => i.naturalWidth), 1120, 'at rest the <img> still shows the full standard picture');
+  } finally { await context.close(); }
+});
+
 test('home with motion reduced on a retina screen: still no canvas, and the large picture shows once the slider is still', async () => {
   const context = await env.browser.newContext({viewport: {width: 1280, height: 800}, deviceScaleFactor: 2, reducedMotion: 'reduce'});
   try {

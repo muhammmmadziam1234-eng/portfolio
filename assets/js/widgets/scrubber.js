@@ -7,9 +7,11 @@ const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
  * frames: [{src, hi, dense, at, alt}] with `at` from 0 to 1. Returns {set, get, destroy}.
  *
  * Two layers. While the picture MOVES, a canvas draws the sequence at an eased position and blends the two nearest pictures, so dragging,
- * playing and the intro glide instead of stepping. Those pictures (`src`) are decoded once and kept for the whole run, so nothing is decoded
- * while it moves, and the <img> is not touched per frame. When motion stops the canvas settles onto a real picture and the <img> takes over:
- * the browser scales an <img> with a better filter than a canvas gets. A picture at rest is therefore always a real render, never a blend.
+ * playing and the intro glide instead of stepping. Those pictures (`src`) are decoded once, up front, into ImageBitmaps, so the canvas never
+ * decodes anything while it moves, and the <img> is not touched per frame. If the frame rate drops while moving, the canvas steps down
+ * (cheaper smoothing, no blending, fewer pixels) and stays down for that visit. When motion stops the canvas settles onto a real picture and
+ * the <img> takes over: the browser scales an <img> with a better filter than a canvas gets. A picture at rest is therefore always a real
+ * render at full quality, never a blend, whatever level the canvas is on.
  * On a screen that needs it (the picture is more than 900 device pixels across: a retina laptop, any phone at 3x) the <img> shows the large
  * version (`hi`), fetched on demand, so only one large picture is ever held. Below that the standard picture is the sharper one (shrinking
  * 1680 pixels to 660 loses more than shrinking 1120 does; measured), and the large ones are never downloaded.
@@ -35,15 +37,18 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
   // The intro waits for the same moment, so its pictures never compete with the first one while the page is loading.
   // "Loaded" is not enough: a picture that arrived but was never decoded is decoded at the moment it is first shown, and on the
   // first run that happens about sixty times a second in the middle of the intro (the lag and the soft, late pictures).
-  // So each one is decoded here, and the decoded <img> is kept for the whole run so the browser does not throw its pixels away before
-  // they are drawn. (An ImageBitmap looks safer, but drawing one at the smoothing quality that keeps the picture clean cost 3 to 10 times
-  // more per frame in testing, enough to drop frames on a retina screen; a decoded <img> is the cheapest thing to draw.)
+  // Decoding the <img> does not help the canvas: the first time a canvas draws a picture it decodes it again, on the main thread,
+  // about 4 ms each (seen in a trace). With 79 pictures the fastest stretch of the intro meets over two new ones every frame, which
+  // costs more than the 16.7 ms a frame has, and a slower device drops most of its frames. So each picture is turned into an
+  // ImageBitmap here: decoded pixels we own, which the canvas draws with no decoding at all. (Without ImageBitmap the decoded <img>
+  // is kept instead.)
   let loading = null;
   const warm = [], pics = [];
   const warmUp = (src, i) => new Promise(done => {
-    const pre = new Image(); pre.decoding = 'async'; pre.src = src; warm.push(pre);
-    const ok = () => { pics[i] = pre; done(); };
-    if (pre.decode) pre.decode().then(ok, done); else { pre.onload = ok; pre.onerror = done; }
+    const pre = new Image(); pre.decoding = 'async'; pre.src = src;
+    const keep = () => { warm.push(pre); pics[i] = pre; done(); };
+    const bitmap = () => (window.createImageBitmap ? createImageBitmap(pre).then(b => { pics[i] = b; done(); }, keep) : keep());
+    if (pre.decode) pre.decode().then(bitmap, done); else { pre.onload = bitmap; pre.onerror = done; }
   });
   const loadAll = () => loading ??= Promise.all(frames.map((f, i) => warmUp(f.src, i))).then(startSmooth);
   const pageReady = new Promise(done => { const go = () => setTimeout(done, 300); if (document.readyState === 'complete') go(); else addEventListener('load', go, {once: true}); });
@@ -146,6 +151,11 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
   // While the position is changing it blends the two pictures either side of it. Once nothing has moved for a moment it chases the nearest
   // picture it can rest on (restOf), so it comes to rest on a true render with no ghost of its neighbour.
   let pos = 0, vel = 0, smooth = false, live = false, epoch = 0, sraf = 0, lastDraw = 0, box = null, resizer = null;
+  // How hard the canvas works while the picture moves. It starts at the best level and, if frames keep running slow (a weak GPU, a busy
+  // phone), steps down: cheaper smoothing, then no blending of neighbours, then fewer pixels. It never steps back up in the same visit.
+  // At rest the <img> is what is seen, so none of this touches the still picture, only how the movement between pictures is drawn.
+  const LEVELS = [{q: 'medium', blend: true, px: 1}, {q: 'low', blend: true, px: 1}, {q: 'low', blend: false, px: 1}, {q: 'low', blend: false, px: 0.7}, {q: 'low', blend: false, px: 0.5}];
+  let lvl = 0, liveFrames = 0, winFrames = 0, winSlow = 0;
   const ctx = canvas.getContext?.('2d', {alpha: false});
   // Whether the <img> should show the large picture now (see the header), and the picture to come to rest on: the nearest one that can be
   // shown at full quality (only those with a large version, when the large version is wanted).
@@ -162,10 +172,10 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     if (!img.clientWidth) return false;
     const r = img.getBoundingClientRect(), f = frame.getBoundingClientRect();
     let dpr = window.devicePixelRatio || 1;
-    dpr = Math.min(dpr, Math.sqrt(16e6 / Math.max(1, r.width * r.height)));
+    dpr = Math.min(dpr, Math.sqrt(16e6 / Math.max(1, r.width * r.height))) * LEVELS[lvl].px;
     const w = Math.max(1, Math.round(r.right * dpr) - Math.round(r.left * dpr)), hgt = Math.max(1, Math.round(r.bottom * dpr) - Math.round(r.top * dpr));
     Object.assign(canvas.style, {left: r.left - f.left + 'px', top: r.top - f.top + 'px', width: r.width + 'px', height: r.height + 'px'});
-    if (canvas.width !== w || canvas.height !== hgt) { canvas.width = w; canvas.height = hgt; }
+    if (canvas.width !== w || canvas.height !== hgt) { canvas.width = w; canvas.height = hgt; ctx.fillStyle = '#232c33'; ctx.fillRect(0, 0, w, hgt); }
     box = {w, h: hgt};
     return true;
   };
@@ -175,17 +185,20 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     const a = frames[lo], b = frames[Math.min(lo + 1, frames.length - 1)];
     const k = b.at > a.at ? clamp((pos - a.at) / (b.at - a.at), 0, 1) : 0;
     const base = pics[lo], over = pics[Math.min(lo + 1, frames.length - 1)];
-    const iw = base.naturalWidth, ih = base.naturalHeight, sc = Math.min(box.w / iw, box.h / ih);
+    const iw = base.naturalWidth || base.width, ih = base.naturalHeight || base.height, sc = Math.min(box.w / iw, box.h / ih);
     const dw = Math.round(iw * sc), dh = Math.round(ih * sc), dx = Math.round((box.w - dw) / 2), dy = Math.round((box.h - dh) / 2);
-    ctx.imageSmoothingQuality = 'high';
-    ctx.fillStyle = '#232c33'; ctx.fillRect(0, 0, box.w, box.h);
-    ctx.drawImage(k > 0.995 ? over : base, dx, dy, dw, dh);
-    if (k > 0.005 && k <= 0.995) { ctx.globalAlpha = k; ctx.drawImage(over, dx, dy, dw, dh); ctx.globalAlpha = 1; }
+    // 'medium' (mipmapped) costs about a third as much again as 'low' for an ImageBitmap, and 'high' about three times; while the picture
+    // moves nobody sees the difference, and the sharp version is the <img> at rest. The background is filled once, when the canvas is
+    // sized (fit), not every frame.
+    const L = LEVELS[lvl], single = !L.blend || k < 0.005 || k > 0.995;
+    ctx.imageSmoothingQuality = L.q;
+    ctx.drawImage(single && k >= 0.5 ? over : base, dx, dy, dw, dh);
+    if (!single) { ctx.globalAlpha = k; ctx.drawImage(over, dx, dy, dw, dh); ctx.globalAlpha = 1; }
     return true;
   }
   // While the picture moves the canvas is on top (class `live`); at rest it fades out and the <img> underneath, showing the large
   // version of the same render, is what is seen. The fade hides the small change in sharpness.
-  const goLive = () => { if (live || !draw()) return; live = true; frame.classList.add('live'); };
+  const goLive = () => { if (live || !draw()) return; live = true; liveFrames = winFrames = winSlow = 0; frame.classList.add('live'); };
   async function showFull(f, hi, mine) {
     const big = hi && f.hi, want = big ? f.hi : f.src;
     if (img.getAttribute('src') !== want) img.src = want;
@@ -203,7 +216,14 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
   function smoothStep(now) {
     sraf = 0;
     if (destroyed) return;
+    const gap = lastDraw ? now - lastDraw : 0;
     const dt = Math.min(0.05, Math.max(0.001, (now - (lastDraw || now - 16)) / 1000)); lastDraw = now;
+    // Judge the frame rate over windows of 12 frames of movement (skipping the first few): four slow ones (over 24 ms) step down one level,
+    // nine or more (most of them) step down two, so a weak device settles within the first second or so of the first movement.
+    if (live && gap > 0 && gap < 250 && ++liveFrames > 4) {
+      winFrames++; if (gap > 24) winSlow++;
+      if (winFrames === 12) { if (winSlow >= 4) { lvl = Math.min(LEVELS.length - 1, lvl + (winSlow >= 9 ? 2 : 1)); box = null; } winFrames = winSlow = 0; }
+    }
     const idle = now - moved > 110 && !playing && !drag;
     const goal = idle ? frames[restOf(p, wantsHi())].at : p;
     const w = 17, x = w * dt, ex = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x), change = pos - goal, temp = (vel + w * change) * dt;
@@ -224,5 +244,5 @@ export function mountScrubber(root, {frames, ratio = '1120 / 712', label, endLab
     kick();
   }
   set(initial);
-  return {set, get: () => p, destroy() { destroyed = true; halt(); clearTimeout(upTimer); cancelAnimationFrame(sraf); resizer?.disconnect(); observer?.disconnect(); warm.length = 0; pics.length = 0; }};
+  return {set, get: () => p, destroy() { destroyed = true; halt(); clearTimeout(upTimer); cancelAnimationFrame(sraf); resizer?.disconnect(); observer?.disconnect(); warm.length = 0; for (const b of pics) b?.close?.(); pics.length = 0; }};
 }
