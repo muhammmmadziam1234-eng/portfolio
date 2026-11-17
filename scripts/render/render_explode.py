@@ -4,19 +4,24 @@ The camera starts on the saved hero view and moves to the saved exploded view on
 sensor fills the picture at every step instead of starting small. Every frame is rendered from the project's own
 Blender file with its explode control set to that position.
 
-Run through bpy_run.py:  python bpy_run.py cirrus.blend render_explode.py OUTDIR [N] [PERCENT]
-  N frames (default 40); PERCENT of full size, for a quick preview (default 100)."""
+Run through bpy_run.py:  python bpy_run.py cirrus.blend render_explode.py OUTDIR [N] [PERCENT] [between]
+  N frames (default 40). PERCENT of the 1120 x 712 base size (default 150, so 1680 x 1068: the high-resolution set; use 50 for a quick
+  preview). The denoiser is on, so 32 samples are enough at this size.
+  "between" renders the N - 1 frames halfway between each pair (explode-00b.webp is halfway between explode-00 and explode-01), on the
+  same camera path, so they are true renders that sit exactly between the first set's. The page uses them for smoother motion.
+  scripts/render/make_sets.py then builds the files the site loads from the two folders."""
 import os, sys, bpy
 from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Matrix, Vector
 
 args = sys.argv[sys.argv.index("--") + 1:]
 out, n = args[0], int(args[1]) if len(args) > 1 else 40
-percent = int(args[2]) if len(args) > 2 else 100
+percent = int(args[2]) if len(args) > 2 else 150
+between = len(args) > 3 and args[3] == "between"
 scene = bpy.context.scene
 scene.render.resolution_x, scene.render.resolution_y, scene.render.resolution_percentage = 1120, 712, percent
 scene.render.threads_mode, scene.render.threads = "FIXED", max(1, os.cpu_count() or 1)
-scene.cycles.samples, scene.cycles.adaptive_min_samples = 24, 8
+scene.cycles.samples, scene.cycles.adaptive_min_samples = 32, 8
 scene.render.image_settings.file_format, scene.render.image_settings.quality = "WEBP", 80
 
 hero, wide = bpy.data.objects["Camera · 01 Hero"], bpy.data.objects["Camera · 02 Exploded"]
@@ -87,10 +92,12 @@ for s, required in zip(smooth, need):
     path.append(top)
 print("camera path:", " ".join(f"{s:.2f}" for s in path), flush=True)
 
-# 3. Render.
-for i in range(n):
-    explode(i / (n - 1))
-    place(path[i])
-    scene.render.filepath = f"{out}/explode-{i:02d}.webp"
+# 3. Render. The frames halfway between two positions use the explode value and the camera halfway between theirs.
+jobs = ([((i + 0.5) / (n - 1), (path[i] + path[i + 1]) / 2, f"{out}/explode-{i:02d}b.webp") for i in range(n - 1)] if between
+        else [(i / (n - 1), path[i], f"{out}/explode-{i:02d}.webp") for i in range(n)])
+for k, (value, cam_at, filepath) in enumerate(jobs):
+    explode(value)
+    place(cam_at)
+    scene.render.filepath = filepath
     bpy.ops.render.render(write_still=True)
-    print(f"rendered {i + 1}/{n} at Explode={root['Explode']:.3f}, camera {path[i]:.2f}", flush=True)
+    print(f"rendered {k + 1}/{len(jobs)} at Explode={root['Explode']:.3f}, camera {cam_at:.2f}", flush=True)

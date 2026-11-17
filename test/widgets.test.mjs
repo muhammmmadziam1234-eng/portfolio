@@ -58,12 +58,13 @@ test('home: the intro starts only once every frame is decoded, so the first run 
   try {
     const page = await context.newPage();
     await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'deviceMemory', {get: () => 8}); // a desktop-class machine, whatever runs the test
       const decoded = new Set(), real = HTMLImageElement.prototype.decode;
       HTMLImageElement.prototype.decode = function () { return real.call(this).then(() => { decoded.add(this.currentSrc); }); };
       window.__atIntroStart = null;
       const watch = () => {
         const slider = document.querySelector('.scrub-controls input');
-        if (slider && Number(slider.value) > 0 && window.__atIntroStart === null) window.__atIntroStart = [...decoded].filter(s => /explode-\d+\.webp/.test(s)).length;
+        if (slider && Number(slider.value) > 0 && window.__atIntroStart === null) window.__atIntroStart = [...decoded].filter(s => /\/explode-\d+b?\.webp/.test(s) && !s.includes('/hi/')).length;
         if (window.__atIntroStart === null) requestAnimationFrame(watch);
       };
       requestAnimationFrame(watch);
@@ -88,23 +89,121 @@ test('home: motion glides between the rendered pictures, and a picture at rest i
       for (let i = 0; i < 30; i++) { await new Promise(r => requestAnimationFrame(r)); seen.add(canvas.toDataURL('image/jpeg', 0.2)); }
       return seen.size;
     });
-    // Eight rendered pictures lie between the first and last of the final stretch alone; the old widget showed one jump.
+    // The old widget showed one jump; the canvas passes through many pictures.
     assert.ok(run > 12, `the canvas passed through ${run} different pictures`);
     // At rest: set a position between two renders; the canvas must equal the nearest render drawn alone (no ghost of its neighbour).
     const rest = await page.evaluate(async () => {
       const slider = document.querySelector('.scrub-controls input'), canvas = document.querySelector('.scrub-canvas'), img = document.querySelector('.scrub-frame img');
       slider.value = '437'; slider.dispatchEvent(new Event('input', {bubbles: true}));
-      await new Promise(r => setTimeout(r, 900));
+      for (let i = 0; i < 300 && document.querySelector('.scrub-frame.live'); i++) await new Promise(r => setTimeout(r, 20));
       const ref = document.createElement('canvas'); ref.width = canvas.width; ref.height = canvas.height;
-      const x = ref.getContext('2d'), pic = new Image(); pic.src = img.src; await pic.decode();
-      const k = Math.min(canvas.width / pic.naturalWidth, canvas.height / pic.naturalHeight), w = pic.naturalWidth * k, h = pic.naturalHeight * k;
-      x.fillStyle = '#232c33'; x.fillRect(0, 0, canvas.width, canvas.height); x.imageSmoothingQuality = 'high'; x.drawImage(pic, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+      const x = ref.getContext('2d'), pic = new Image(); pic.src = img.getAttribute('src').replace('/hi/', '/'); await pic.decode(); // the standard picture of the rest frame
+      const k = Math.min(canvas.width / pic.naturalWidth, canvas.height / pic.naturalHeight), w = Math.round(pic.naturalWidth * k), h = Math.round(pic.naturalHeight * k);
+      x.fillStyle = '#232c33'; x.fillRect(0, 0, canvas.width, canvas.height); x.imageSmoothingQuality = 'high'; x.drawImage(pic, Math.round((canvas.width - w) / 2), Math.round((canvas.height - h) / 2), w, h);
       const a = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data, b = x.getImageData(0, 0, canvas.width, canvas.height).data;
       let diff = 0; for (let i = 0; i < a.length; i += 28) diff += Math.abs(a[i] - b[i]);
       return {diff: diff / (a.length / 28), src: img.getAttribute('src')};
     });
     assert.ok(rest.diff < 0.5, `at rest the canvas differs from ${rest.src} by ${rest.diff}`);
   });
+});
+
+test('home on a retina screen: while the sensor moves the canvas is on top, and at rest the large picture is', async () => {
+  const context = await env.browser.newContext({viewport: {width: 1280, height: 800}, deviceScaleFactor: 2, reducedMotion: 'no-preference'});
+  try {
+    const page = await context.newPage();
+    await page.goto(env.base, {waitUntil: 'load'});
+    await page.waitForSelector('.scrub-frame.smooth', {timeout: 10000});
+    await page.getByRole('slider').focus();
+    await page.keyboard.press('Home');
+    const atRest = () => page.waitForFunction(() => {
+      const f = document.querySelector('.scrub-frame'), i = f.querySelector('img');
+      return !f.classList.contains('live') && /\/hi\//.test(i.getAttribute('src')) && i.complete && getComputedStyle(f.querySelector('canvas')).opacity === '0';
+    }, null, {timeout: 6000});
+    await atRest();
+    assert.equal(await page.locator('.scrub-frame img').evaluate(i => i.naturalWidth), 1680, 'at rest the <img> shows the 1680-pixel render');
+    const run = await page.evaluate(async () => {
+      const slider = document.querySelector('.scrub-controls input'), frame = document.querySelector('.scrub-frame'), img = frame.querySelector('img');
+      let srcChanges = 0; new MutationObserver(m => { srcChanges += m.length; }).observe(img, {attributes: true, attributeFilter: ['src']});
+      slider.value = '1000'; slider.dispatchEvent(new Event('input', {bubbles: true}));
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const onTop = frame.classList.contains('live') && getComputedStyle(frame.querySelector('canvas')).opacity === '1';
+      for (let i = 0; i < 300 && frame.classList.contains('live'); i++) await new Promise(r => setTimeout(r, 20));
+      await new Promise(r => setTimeout(r, 50));
+      return {onTop, srcChanges};
+    });
+    assert.equal(run.onTop, true, 'the canvas is on top while the picture moves');
+    // The <img> is not touched for every picture the slider passes (the old widget did, about forty times); only the large one at rest.
+    assert.ok(run.srcChanges <= 2, `the <img> changed its picture ${run.srcChanges} times during one sweep`);
+    await atRest();
+    assert.match(await page.locator('.scrub-frame img').getAttribute('src'), /hi\/explode-39\.webp$/);
+  } finally { await context.close(); }
+});
+
+test('home on a normal screen: the standard picture is sharper there, so the large pictures are never downloaded', async () => {
+  // Measured: up to about 900 device pixels across, shrinking the 1120-pixel picture is sharper than shrinking the 1680-pixel one.
+  const context = await env.browser.newContext({viewport: {width: 1280, height: 800}, deviceScaleFactor: 1, reducedMotion: 'no-preference'});
+  try {
+    const page = await context.newPage(), large = [];
+    page.on('request', r => { if (new URL(r.url()).pathname.includes('/cirrus-explode/hi/')) large.push(r.url()); });
+    await page.goto(env.base, {waitUntil: 'load'});
+    await page.waitForSelector('.scrub-frame.smooth', {timeout: 10000});
+    await page.getByRole('slider').focus();
+    await page.keyboard.press('End');
+    await page.waitForFunction(() => { const f = document.querySelector('.scrub-frame'); return !f.classList.contains('live') && /explode-39\.webp$/.test(f.querySelector('img').getAttribute('src')); }, null, {timeout: 8000});
+    assert.equal(await page.locator('.scrub-frame img').evaluate(i => i.naturalWidth), 1120, 'the standard picture is what is shown at rest');
+    assert.deepEqual(large, [], 'no large picture was requested');
+  } finally { await context.close(); }
+});
+
+test('home on a phone: no in-between pictures are loaded, the canvas is as sharp as the screen, and the large picture shows at rest', async () => {
+  const context = await env.browser.newContext({viewport: {width: 390, height: 844}, deviceScaleFactor: 3, isMobile: true, hasTouch: true, reducedMotion: 'no-preference'});
+  try {
+    const page = await context.newPage(), requested = new Set();
+    page.on('request', r => { const u = new URL(r.url()).pathname; if (/\/explode-/.test(u)) requested.add(u); });
+    await page.goto(env.base, {waitUntil: 'load'});
+    await page.waitForSelector('.scrub-frame.smooth', {timeout: 10000});
+    await page.waitForFunction(() => /\/hi\//.test(document.querySelector('.scrub-frame img').getAttribute('src')) && document.querySelector('.scrub-frame img').complete, null, {timeout: 8000});
+    const standard = [...requested].filter(u => !u.includes('/hi/'));
+    assert.equal(standard.filter(u => /b\.webp$/.test(u)).length, 0, 'a phone does not load the in-between pictures');
+    assert.equal(standard.length, 40, 'it loads the 40 standard pictures');
+    const m = await page.evaluate(() => { const i = document.querySelector('.scrub-frame img'), c = document.querySelector('.scrub-canvas'); return {w: i.naturalWidth, canvas: c.width, css: i.getBoundingClientRect().width}; });
+    assert.equal(m.w, 1680, 'the large picture is shown at rest');
+    assert.ok(m.canvas >= m.css * 3 - 2, `the canvas is ${m.canvas} pixels wide for a ${m.css} px picture at 3x (it was capped at 2x)`);
+  } finally { await context.close(); }
+});
+
+test('home: if the large pictures cannot load, the standard one stays and everything still works', async () => {
+  const context = await env.browser.newContext({viewport: {width: 1280, height: 800}, deviceScaleFactor: 2, reducedMotion: 'no-preference'});
+  try {
+    const page = await context.newPage(), errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    await page.route('**/cirrus-explode/hi/**', route => route.abort());
+    await page.goto(env.base, {waitUntil: 'load'});
+    await page.waitForSelector('.scrub-frame.smooth', {timeout: 10000});
+    await page.getByRole('slider').focus();
+    await page.keyboard.press('End');
+    await page.waitForFunction(() => {
+      const f = document.querySelector('.scrub-frame'), i = f.querySelector('img');
+      return !f.classList.contains('live') && /explode-39\.webp$/.test(i.getAttribute('src')) && i.complete && i.naturalWidth === 1120;
+    }, null, {timeout: 8000});
+    assert.equal(await page.locator('.scrub-frame img').getAttribute('alt'), explodeFrames.at(-1).alt);
+    assert.deepEqual(errors, []);
+  } finally { await context.close(); }
+});
+
+test('home with motion reduced on a retina screen: still no canvas, and the large picture shows once the slider is still', async () => {
+  const context = await env.browser.newContext({viewport: {width: 1280, height: 800}, deviceScaleFactor: 2, reducedMotion: 'reduce'});
+  try {
+    const page = await context.newPage();
+    await page.goto(env.base, {waitUntil: 'load'});
+    await page.waitForFunction(() => document.querySelector('.scrub-frame img'));
+    await page.getByRole('slider').focus();
+    await page.keyboard.press('End');
+    assert.equal(await page.locator('.scrub-frame img').getAttribute('src'), explodeFrames.at(-1).src, 'the standard picture shows at once');
+    await page.waitForFunction(() => { const i = document.querySelector('.scrub-frame img'); return /hi\/explode-39\.webp$/.test(i.getAttribute('src')) && i.complete && i.naturalWidth === 1680; }, null, {timeout: 8000});
+    assert.equal(await page.locator('.scrub-frame.smooth').count(), 0, 'and there is still no canvas');
+  } finally { await context.close(); }
 });
 
 test('home: with motion reduced the sensor stays a plain picture, with no canvas shown', async () => {
