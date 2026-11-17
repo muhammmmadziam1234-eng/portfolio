@@ -302,9 +302,9 @@ main.entering{animation:route-in .2s ease-out}
 
 /* scrubber */
 .scrub-frame{position:relative;background:#232c33;touch-action:pan-y;cursor:ew-resize;user-select:none;-webkit-user-select:none}
-.scrub-canvas{position:absolute;display:none;pointer-events:none}
-.scrub-frame.live .scrub-canvas{display:block}
-.scrub-frame.live img{opacity:0}
+.scrub-canvas{position:absolute;display:none;opacity:0;pointer-events:none;transition:opacity .16s linear}
+.scrub-frame.smooth .scrub-canvas{display:block}
+.scrub-frame.live .scrub-canvas{opacity:1;transition:none}
 .scrub-frame img{width:100%;height:auto;aspect-ratio:var(--ratio,1120/712);max-height:calc(100vh - 260px);min-height:220px;object-fit:contain}
 .scrub-controls{display:flex;gap:12px;align-items:center;padding:12px var(--s2)}
 .scrub-controls input[type=range]{flex:1;min-width:0;height:28px}
